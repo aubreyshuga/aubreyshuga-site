@@ -2,6 +2,6 @@
 header:
   caption: ""
   image: ""
-title: Posts
+title: Data Science Blog
 view: 2
 ---

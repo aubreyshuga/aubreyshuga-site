@@ -1,0 +1,21 @@
+# Theme metadata
+name = "My Theme"
+
+# Is theme light or dark?
+light = true
+
+# Primary
+primary = "#F08080"
+
+# Menu
+menu_primary = "#F08080"
+menu_text = "rgba(255,255,255,0.6)"
+menu_text_active = "rgba(255,255,255,1)"
+menu_title = "#fff"
+
+# Backgrounds
+background = "#FDF6ED"
+home_section_odd = "#FDF6ED"
+home_section_even = "#FDF6ED"
+
+font = "minimal"
