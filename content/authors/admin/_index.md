@@ -32,7 +32,7 @@ social:
   icon_pack: fab
   link: https://www.linkedin.com/in/aubrey-shuga-630a34178/
 superuser: yes
-bio: '...'
+bio: ''
 ---
 
 I'm currently a senior studying Data Science at Brigham-Young University Idaho. I love visualizing data in R. My most recent project is an analysis of student peer-mentoring programs and their affect on student success.

@@ -4,7 +4,7 @@
 widget: featurette
 
 # Activate this widget? true/false
-active: false
+active: true
 
 # This file represents a page section.
 headless: true
@@ -28,9 +28,22 @@ feature:
   icon_pack: fas
   name: Statistics
 - description: 
-  icon: camera-retro
+  icon: python
+  icon_pack: fab
+  name: Python
+- description: 
+  icon: database
   icon_pack: fas
-  name: Photography
+  name: SQL
+- description: 
+  icon: desktop
+  icon_pack: fas
+  name: Machine Learning
+- description: 
+  icon: chart-bar
+  icon_pack: fas
+  name: Dataviz
+
 
 # Uncomment to use emoji icons.
 # - icon: ":smile:"
