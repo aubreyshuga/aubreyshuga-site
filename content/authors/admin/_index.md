@@ -35,5 +35,4 @@ superuser: yes
 bio: '...'
 ---
 
-Bio here...
-
+I'm currently a senior studying Data Science at Brigham-Young University Idaho. I love visualizing data in R. My most recent project is an analysis of student peer-mentoring programs and their affect on student success.
