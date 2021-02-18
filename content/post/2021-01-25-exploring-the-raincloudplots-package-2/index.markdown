@@ -10,13 +10,15 @@ summary: ''
 authors: []
 lastmod: '2021-01-25T01:39:27-07:00'
 featured: no
-draft: yes
+draft: no
 image:
   caption: ''
   focal_point: ''
-  preview_only: no
+  preview_only: true
 projects: []
 ---
+
+
 
 
 
@@ -79,6 +81,25 @@ c_during = "#21731B"
 c_post = "#21731B"
 ```
 
+### Simulate Data
+
+Before I apply this to the real student data for my project, I'd like to practice on some simulated data. I used `rnorm()` to generate some random GPA values with various means that are similar to my real data.
+
+
+```r
+#Simulate data for each group 
+set.seed(1)
+Mentored <- data.frame(Pre_1 = round(pmax(0, rnorm(100, mean=1.17, sd = .82)), 2), 
+                       During = round(pmin(4, pmax(0, rnorm(100, mean=2.6, sd = 1))), 2),
+                       Post_1 = round(pmin(4, pmax(0, rnorm(100, mean=2.4, sd = 1))), 2), 
+                       Group = "Mentored")
+
+Control <- data.frame(Pre_1 = round(pmax(0, rnorm(100, mean=1.07, sd = .78)), 2), 
+                      During = round(pmin(4, pmax(0, rnorm(100, mean=1.07, sd = 1))), 2),
+                      Post_1 = round(pmin(4,pmax(0, rnorm(100, mean=1.07, sd = 1.28))), 2), 
+                      Group = "Control")
+```
+
 ---
 
 ## 1x1 Raincloud Plots
@@ -87,14 +108,14 @@ There are a few different plotting functions in the raincloud package. I started
 
 The first step is to create a dataframe that works with the 1x1 plot functions. There is a function called `data_1x1()` that creates a dataframe with all of the correct columns. 
 
-To make a 1x1 dataframe for the Mentored Group, I needed to pick two sets of values to compare. Using `Mentored$Pre 1` and `Mentored$Post 1` will compare the student's GPA's from the semester before they participated in mentoring and the semester after they participate in mentoring.
+To make a 1x1 dataframe for the Mentored Group, I needed to pick two sets of values to compare. Using `Mentored$Pre_1` and `Mentored$Post_1` will compare the student's GPA's from the semester before they participated in mentoring and the semester after they participate in mentoring.
 
 
 ```r
 # Create Mentored Pre-Post 1x1
 Mentored_pre_post <- data_1x1( 
-  array_1 = Mentored$`Pre 1`, #first set of values
-  array_2 = Mentored$`Post 1`, #second set of values
+  array_1 = Mentored$Pre_1, #first set of values
+  array_2 = Mentored$Post_1, #second set of values
   jit_distance = .09,
   jit_seed = 321) 
 ```
@@ -102,22 +123,22 @@ Mentored_pre_post <- data_1x1(
 
 ```
 ##   y_axis x_axis id       jit
-## 1  0.000      1  1 1.0820609
-## 2  0.000      1  2 1.0787114
-## 3  1.775      1  3 0.9528797
-## 4  1.271      1  4 0.9559133
-## 5  0.000      1  5 0.9802922
-## 6  1.621      1  6 0.9714124
+## 1   0.66      1  1 1.0820609
+## 2   1.32      1  2 1.0787114
+## 3   0.48      1  3 0.9528797
+## 4   2.48      1  4 0.9559133
+## 5   1.44      1  5 0.9802922
+## 6   0.50      1  6 0.9714124
 ```
 
 ```
 ##     y_axis x_axis  id      jit
-## 395  2.700      2 195 2.040425
-## 396  1.700      2 196 1.957888
-## 397  0.175      2 197 2.049311
-## 398  3.611      2 198 1.969710
-## 399  2.262      2 199 1.929180
-## 400  3.100      2 200 2.062952
+## 195   4.00      2  95 2.046353
+## 196   2.53      2  96 1.965210
+## 197   3.17      2  97 2.001292
+## 198   3.36      2  98 2.003551
+## 199   2.35      2  99 1.951014
+## 200   2.09      2 100 2.076574
 ```
 
 This function takes two arrays and adds them into a long format dataframe with columns that include various data to make your plot. Both arrays are put into the `y_axis` column and assigned a value of 1 or 2 in the `x_axis` column, depending on which array they came from. These arrays are also paired, so the matching values from each array should have the same value in the `id` column. Because of this, you'll want to make sure that both of your arrays are in the same order if your data is paired.
@@ -183,8 +204,8 @@ My next step was to create these same two plots with the Control group.
 ```r
 #Create Control Pre-Post 1x1
 Control_pre_post <- data_1x1( 
-  array_1 = Control$`Pre 1`, 
-  array_2 = Control$`Post 1`, 
+  array_1 = Control$`Pre_1`, 
+  array_2 = Control$`Post_1`, 
   jit_distance = .09, 
   jit_seed = 321) 
 
@@ -243,10 +264,10 @@ What I really want to compare is the GPA change for both groups of students. The
 ```r
 #Create 2x2 together dataframe
 Both_pre_post_together <- data_2x2(
-  array_1 = Mentored$`Pre 1`[1:196], #first set of values - group 1
-  array_2 = Control$`Pre 1`[1:196], #first set of values - group 2
-  array_3 = Mentored$`Post 1`[1:196], #second set of values - group 1
-  array_4 = Control$`Post 1`[1:196], #second set of values - group 2
+  array_1 = Mentored$Pre_1, #first set of values - group 1
+  array_2 = Control$Pre_1, #first set of values - group 2
+  array_3 = Mentored$Post_1, #second set of values - group 1
+  array_4 = Control$Post_1, #second set of values - group 2
   labels = (c('Mentored','Control')),
   jit_distance = .09,
   jit_seed = 321,
@@ -256,22 +277,22 @@ Both_pre_post_together <- data_2x2(
 
 ```
 ##   y_axis x_axis id    group       jit
-## 1  0.000      1  1 Mentored 1.0820609
-## 2  0.000      1  2 Mentored 1.0787114
-## 3  1.775      1  3 Mentored 0.9528797
-## 4  1.271      1  4 Mentored 0.9559133
-## 5  0.000      1  5 Mentored 0.9802922
-## 6  1.621      1  6 Mentored 0.9714124
+## 1   0.66      1  1 Mentored 1.0820609
+## 2   1.32      1  2 Mentored 1.0787114
+## 3   0.48      1  3 Mentored 0.9528797
+## 4   2.48      1  4 Mentored 0.9559133
+## 5   1.44      1  5 Mentored 0.9802922
+## 6   0.50      1  6 Mentored 0.9714124
 ```
 
 ```
 ##     y_axis x_axis  id   group      jit
-## 779     NA   2.01 191 Control 1.933396
-## 780   0.00   2.01 192 Control 2.057038
-## 781     NA   2.01 193 Control 1.978771
-## 782     NA   2.01 194 Control 1.962761
-## 783   1.29   2.01 195 Control 2.068639
-## 784     NA   2.01 196 Control 2.074931
+## 395   0.00   2.01  95 Control 2.050425
+## 396   2.05   2.01  96 Control 1.967888
+## 397   0.03   2.01  97 Control 2.059311
+## 398   0.51   2.01  98 Control 1.979710
+## 399   2.23   2.01  99 Control 1.939180
+## 400   0.09   2.01 100 Control 2.072952
 ```
 
 The order of your arrays really matters here. They'll be added into the `y-axis` column in the order you name them, and this order controls which `group` (in our case - Mentored or Control) they are assigned to and which `x-axis` value they are assigned (1.00, 1.01, 2.00, or 2.01). Keep in mind that array_1 and array_3 will get assigned the first `group` label ("Mentored"), and array_2 and array_4 will get assigned the second `group` label ("Control"). Like with the 1x1, the arrays are paired, so they should be in the same order and have the same number of rows.
@@ -309,10 +330,10 @@ The second type uses 4 x-axis ticks and shows each group side-by-side on the plo
 ```r
 #Create 2x2 spread dataframe
 Both_pre_post_spread <- data_2x2(
-  array_1 = Mentored$`Pre 1`[1:196], #first set of values - group 1
-  array_2 = Mentored$`Post 1`[1:196], #second set of values - group 1
-  array_3 = Control$`Pre 1`[1:196], #first set of values - group 2
-  array_4 = Control$`Post 1`[1:196], #second set of values - group 2
+  array_1 = Mentored$Pre_1, #first set of values - group 1
+  array_2 = Mentored$Post_1, #second set of values - group 1
+  array_3 = Control$Pre_1, #first set of values - group 2
+  array_4 = Control$Post_1, #second set of values - group 2
   labels = (c('Pre 1','Post 1')),
   jit_distance = .09,
   jit_seed = 321,
@@ -322,22 +343,22 @@ Both_pre_post_spread <- data_2x2(
 
 ```
 ##   y_axis x_axis id group       jit
-## 1  0.000      1  1 Pre 1 1.0820609
-## 2  0.000      1  2 Pre 1 1.0787114
-## 3  1.775      1  3 Pre 1 0.9528797
-## 4  1.271      1  4 Pre 1 0.9559133
-## 5  0.000      1  5 Pre 1 0.9802922
-## 6  1.621      1  6 Pre 1 0.9714124
+## 1   0.66      1  1 Pre 1 1.0820609
+## 2   1.32      1  2 Pre 1 1.0787114
+## 3   0.48      1  3 Pre 1 0.9528797
+## 4   2.48      1  4 Pre 1 0.9559133
+## 5   1.44      1  5 Pre 1 0.9802922
+## 6   0.50      1  6 Pre 1 0.9714124
 ```
 
 ```
 ##     y_axis x_axis  id  group      jit
-## 779     NA      4 191 Post 1 3.923396
-## 780   0.00      4 192 Post 1 4.047038
-## 781     NA      4 193 Post 1 3.968771
-## 782     NA      4 194 Post 1 3.952761
-## 783   1.29      4 195 Post 1 4.058639
-## 784     NA      4 196 Post 1 4.064931
+## 395   0.00      4  95 Post 1 4.040425
+## 396   2.05      4  96 Post 1 3.957888
+## 397   0.03      4  97 Post 1 4.049311
+## 398   0.51      4  98 Post 1 3.969710
+## 399   2.23      4  99 Post 1 3.929180
+## 400   0.09      4 100 Post 1 4.062952
 ```
 
 
@@ -388,12 +409,12 @@ The 2x3 dataframes are created using the same `data_2x2()` function as 2x2. You 
 ```r
 #Create 2x3 together dataframe
 Both_2x3 <- data_2x2(
-  array_1 = Mentored$`Pre 1`[1:196], #first set of values - group 1
-  array_2 = Control$`Pre 1`[1:196], #first set of values - group 2
-  array_3 = Mentored$`Semester Mentored...7`[1:196], #second set of values - group 1
-  array_4 = Control$`Semester Mentored...7`[1:196], #second set of values - group 1
-  array_5 = Mentored$`Post 1`[1:196], #third set of values - group 1
-  array_6 = Control$`Post 1`[1:196], #third set of values - group 2
+  array_1 = Mentored$Pre_1, #first set of values - group 1
+  array_2 = Control$Pre_1, #first set of values - group 2
+  array_3 = Mentored$During, #second set of values - group 1
+  array_4 = Control$During, #second set of values - group 1
+  array_5 = Mentored$Post_1, #third set of values - group 1
+  array_6 = Control$Post_1, #third set of values - group 2
   labels = (c('Mentored','Control')),
   jit_distance = .05,
   jit_seed = 321) 
@@ -424,6 +445,13 @@ both_2x3
 
 # Final thoughts
 
+Overall, my the most useful plot for this project is the 1x1 repeated measures plot. Even though it only shows one group, I made a separate plot for each group and displayed them in a grid.
+
+<img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-22-1.png" width="672" />
+
+The chart allows me to clearly see the difference in distribution between both semester and treatment group, as well as the ties connected each student's GPAs from semester to semester.
+
+The `raincloudplots` package was really helpful in quickly creating these plots. The downside was that my data needed to be in a very specific format, and the plots are hard to customize using normal `ggplot` functions. I spent a bit of time looking through the source code to understand what was going on so I could get my data in the right format. As I did that, I learned more about how these plots are built and how I could build them myself using ggplot. If I were to make these types of plots on other data (in tidy/long format), or if I wanted to customize them with a legend and other annotations, then I would probably choose to build the plots myself using ggplot. Aside from those cases, I would definitely use `raincloudplots` again. It's a quick way to visualize both spread and individual points in data.
 
 ---
 

@@ -10,11 +10,11 @@ summary: ''
 authors: []
 lastmod: '2021-01-25T01:39:27-07:00'
 featured: no
-draft: yes
+draft: no
 image:
   caption: ''
   focal_point: ''
-  preview_only: no
+  preview_only: true
 projects: []
 ---
 
@@ -29,17 +29,9 @@ library(readxl)
 ```
 
 
-```{r include=FALSE}
-#This is my data: I need to change this I think before I can publish????
 
-#Read in the data from the client's excel sheet
-Mentored <- read.csv("~/Desktop/SCHOOL/aubreyshuga-site/content/post/2021-01-25-exploring-the-raincloudplots-package-2/mentored.csv") %>%
-  rename(`Semester Mentored...1` = `Semester.Mentored...1`, `Pre 1` = `Pre.1`, `Semester Mentored...7` = `Semester.Mentored...7`, `Post 1` = `Post.1`, `Post 2` = `Post.2`)
 
-Control <- read.csv("~/Desktop/SCHOOL/aubreyshuga-site/content/post/2021-01-25-exploring-the-raincloudplots-package-2/control.csv") %>%
-  rename(`Semester Mentored...1` = `Semester.Mentored...1`, `Pre 1` = `Pre.1`, `Semester Mentored...7` = `Semester.Mentored...7`, `Post 1` = `Post.1`, `Post 2` = `Post.2`)
 
-```
 
 # Intro 
 
@@ -95,6 +87,24 @@ c_during = "#21731B"
 c_post = "#21731B"
 ```
 
+### Simulate Data
+
+Before I apply this to the real student data for my project, I'd like to practice on some simulated data. I used `rnorm()` to generate some random GPA values with various means that are similar to my real data.
+
+```{r}
+#Simulate data for each group 
+set.seed(1)
+Mentored <- data.frame(Pre_1 = round(pmax(0, rnorm(100, mean=1.17, sd = .82)), 2), 
+                       During = round(pmin(4, pmax(0, rnorm(100, mean=2.6, sd = 1))), 2),
+                       Post_1 = round(pmin(4, pmax(0, rnorm(100, mean=2.4, sd = 1))), 2), 
+                       Group = "Mentored")
+
+Control <- data.frame(Pre_1 = round(pmax(0, rnorm(100, mean=1.07, sd = .78)), 2), 
+                      During = round(pmin(4, pmax(0, rnorm(100, mean=1.07, sd = 1))), 2),
+                      Post_1 = round(pmin(4,pmax(0, rnorm(100, mean=1.07, sd = 1.28))), 2), 
+                      Group = "Control")
+```
+
 ---
 
 ## 1x1 Raincloud Plots
@@ -103,13 +113,13 @@ There are a few different plotting functions in the raincloud package. I started
 
 The first step is to create a dataframe that works with the 1x1 plot functions. There is a function called `data_1x1()` that creates a dataframe with all of the correct columns. 
 
-To make a 1x1 dataframe for the Mentored Group, I needed to pick two sets of values to compare. Using `Mentored$Pre 1` and `Mentored$Post 1` will compare the student's GPA's from the semester before they participated in mentoring and the semester after they participate in mentoring.
+To make a 1x1 dataframe for the Mentored Group, I needed to pick two sets of values to compare. Using `Mentored$Pre_1` and `Mentored$Post_1` will compare the student's GPA's from the semester before they participated in mentoring and the semester after they participate in mentoring.
 
 ```{r}
 # Create Mentored Pre-Post 1x1
 Mentored_pre_post <- data_1x1( 
-  array_1 = Mentored$`Pre 1`, #first set of values
-  array_2 = Mentored$`Post 1`, #second set of values
+  array_1 = Mentored$Pre_1, #first set of values
+  array_2 = Mentored$Post_1, #second set of values
   jit_distance = .09,
   jit_seed = 321) 
 ```
@@ -175,8 +185,8 @@ My next step was to create these same two plots with the Control group.
 ```{r}
 #Create Control Pre-Post 1x1
 Control_pre_post <- data_1x1( 
-  array_1 = Control$`Pre 1`, 
-  array_2 = Control$`Post 1`, 
+  array_1 = Control$`Pre_1`, 
+  array_2 = Control$`Post_1`, 
   jit_distance = .09, 
   jit_seed = 321) 
 
@@ -230,10 +240,10 @@ What I really want to compare is the GPA change for both groups of students. The
 ```{r}
 #Create 2x2 together dataframe
 Both_pre_post_together <- data_2x2(
-  array_1 = Mentored$`Pre 1`[1:196], #first set of values - group 1
-  array_2 = Control$`Pre 1`[1:196], #first set of values - group 2
-  array_3 = Mentored$`Post 1`[1:196], #second set of values - group 1
-  array_4 = Control$`Post 1`[1:196], #second set of values - group 2
+  array_1 = Mentored$Pre_1, #first set of values - group 1
+  array_2 = Control$Pre_1, #first set of values - group 2
+  array_3 = Mentored$Post_1, #second set of values - group 1
+  array_4 = Control$Post_1, #second set of values - group 2
   labels = (c('Mentored','Control')),
   jit_distance = .09,
   jit_seed = 321,
@@ -276,10 +286,10 @@ The second type uses 4 x-axis ticks and shows each group side-by-side on the plo
 ```{r}
 #Create 2x2 spread dataframe
 Both_pre_post_spread <- data_2x2(
-  array_1 = Mentored$`Pre 1`[1:196], #first set of values - group 1
-  array_2 = Mentored$`Post 1`[1:196], #second set of values - group 1
-  array_3 = Control$`Pre 1`[1:196], #first set of values - group 2
-  array_4 = Control$`Post 1`[1:196], #second set of values - group 2
+  array_1 = Mentored$Pre_1, #first set of values - group 1
+  array_2 = Mentored$Post_1, #second set of values - group 1
+  array_3 = Control$Pre_1, #first set of values - group 2
+  array_4 = Control$Post_1, #second set of values - group 2
   labels = (c('Pre 1','Post 1')),
   jit_distance = .09,
   jit_seed = 321,
@@ -333,12 +343,12 @@ The 2x3 dataframes are created using the same `data_2x2()` function as 2x2. You 
 ```{r}
 #Create 2x3 together dataframe
 Both_2x3 <- data_2x2(
-  array_1 = Mentored$`Pre 1`[1:196], #first set of values - group 1
-  array_2 = Control$`Pre 1`[1:196], #first set of values - group 2
-  array_3 = Mentored$`Semester Mentored...7`[1:196], #second set of values - group 1
-  array_4 = Control$`Semester Mentored...7`[1:196], #second set of values - group 1
-  array_5 = Mentored$`Post 1`[1:196], #third set of values - group 1
-  array_6 = Control$`Post 1`[1:196], #third set of values - group 2
+  array_1 = Mentored$Pre_1, #first set of values - group 1
+  array_2 = Control$Pre_1, #first set of values - group 2
+  array_3 = Mentored$During, #second set of values - group 1
+  array_4 = Control$During, #second set of values - group 1
+  array_5 = Mentored$Post_1, #third set of values - group 1
+  array_6 = Control$Post_1, #third set of values - group 2
   labels = (c('Mentored','Control')),
   jit_distance = .05,
   jit_seed = 321) 
@@ -366,6 +376,15 @@ both_2x3
 
 # Final thoughts
 
+Overall, my the most useful plot for this project is the 1x1 repeated measures plot. Even though it only shows one group, I made a separate plot for each group and displayed them in a grid.
+
+```{r echo=FALSE}
+gridExtra::grid.arrange(M_pre_post_ties, C_pre_post_ties, nrow = 1, ncol = 2)
+```
+
+The chart allows me to clearly see the difference in distribution between both semester and treatment group, as well as the ties connected each student's GPAs from semester to semester.
+
+The `raincloudplots` package was really helpful in quickly creating these plots. The downside was that my data needed to be in a very specific format, and the plots are hard to customize using normal `ggplot` functions. I spent a bit of time looking through the source code to understand what was going on so I could get my data in the right format. As I did that, I learned more about how these plots are built and how I could build them myself using ggplot. If I were to make these types of plots on other data (in tidy/long format), or if I wanted to customize them with a legend and other annotations, then I would probably choose to build the plots myself using ggplot. Aside from those cases, I would definitely use `raincloudplots` again. It's a quick way to visualize both spread and individual points in data.
 
 ---
 
