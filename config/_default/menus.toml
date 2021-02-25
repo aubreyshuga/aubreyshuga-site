@@ -13,10 +13,16 @@
   url = "/post"
   weight = 20
 
+#[[main]]
+#  name = "Projects"
+#  url = "#projects"
+#  weight = 30
+  
 [[main]]
-  name = "Projects"
-  url = "#projects"
+  name = "Senior Project"
+  url = "/category/senior-project/"
   weight = 30
+
 
 #[[main]]
 #  name = "Talks"
