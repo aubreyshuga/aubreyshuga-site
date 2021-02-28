@@ -24,12 +24,7 @@ projects: []
 
 
 
-
-
-
-# Intro 
-
-While working on my senior project, I've been struggling with the best way visualize to my data. I want to see individual datapoints as well as overall distribution. I started with boxplots and scatterplots, but I was really wanting something to show the ties between two sets of values.
+While working on my [senior project](https://aubreyshuga.netlify.app/category/senior-project/) , I've been struggling with the best way visualize to my data. I want to see individual datapoints as well as overall distribution. I started with boxplots and scatterplots, but I was really wanting something to show the ties between two sets of values.
 
 Luckily, I stumbled upon this tweet by Micah Allen:
 
@@ -445,7 +440,7 @@ both_2x3
 
 # Final thoughts
 
-Overall, my the most useful plot for this project is the 1x1 repeated measures plot. Even though it only shows one group, I made a separate plot for each group and displayed them in a grid.
+Overall, the most useful plot for this project is the 1x1 repeated measures plot. Even though it only shows one group, I made a separate plot for each group and displayed them in a grid.
 
 <img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-22-1.png" width="672" />
 
