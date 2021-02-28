@@ -11,6 +11,7 @@ interests:
 - Data Visualization
 - Data Analysis
 - Machine Learning
+- Visual Communication
 organizations:
 - name: Brigham Young University - Idaho
   url: 'https://www.byui.edu/mathematics/student-resources/data-science'
@@ -35,4 +36,5 @@ superuser: yes
 bio: ''
 ---
 
-I'm currently a senior studying Data Science at Brigham-Young University Idaho. I love visualizing data in R. My most recent project is an analysis of student peer-mentoring programs and their impact on student success.
+I'm currently a senior studying Data Science at Brigham-Young University Idaho. I love visualizing data in R. My [most recent project](https://aubreyshuga.netlify.app/category/senior-project/) is an analysis of student peer-mentoring programs and their impact on student success.
+
