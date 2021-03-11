@@ -10,7 +10,6 @@ summary: "For my Senior Project, I would like to perform an exploratory data ana
 authors: []
 lastmod: '2021-02-18T05:34:24-07:00'
 featured: no
-draft: yes
 image:
   caption: ''
   focal_point: ''
