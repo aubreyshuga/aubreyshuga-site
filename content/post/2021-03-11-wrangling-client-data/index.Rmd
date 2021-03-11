@@ -19,16 +19,14 @@ projects: []
 
 I'm currently working on a [project](https://aubreyshuga.netlify.app/category/senior-project/) with data provided by BYU-Idaho Peer-Success Mentoring. Luckily, the provided data was already mostly in the format that I need for my project. However, no project is complete without at least some data wrangling.
 
-In this post, I'll go through all of the steps I took to wrangle the data - from reading in the raw data to my final [tidy](https://tidyr.tidyverse.org/articles/tidy-data.html) dataset. I'll be using using the [tidyverse package](https://www.tidyverse.org/), specifically [dply](https://dplyr.tidyverse.org/) for data manipulation and [readxl](https://readxl.tidyverse.org/) for reading in data from an excel workbook.
+In this post, I'll go through all of the steps I took to wrangle the data - from reading in the raw data to my final [tidy](https://tidyr.tidyverse.org/articles/tidy-data.html) dataset. I'll be using using the [tidyverse package](https://www.tidyverse.org/), specifically [dplyr](https://dplyr.tidyverse.org/) for data manipulation and [readxl](https://readxl.tidyverse.org/) for reading in data from an excel workbook.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 #load packages
 library(dplyr) #for data wrangling
 library(readxl) #to read in .xls and .xlsx sheets.
-library(pander)
-
-#Alternatively:
-library(tidyverse) #includes dplr, readxl, and other packages that are in the tidyverse core
+library(pander) #to print tables in markdown
+library(tidyverse) #includes dplyr, readxl, and other packages that are in the tidyverse core
 ```
 
 ## Project Background

@@ -21,14 +21,12 @@ projects: []
 
 
 <p>I’m currently working on a <a href="https://aubreyshuga.netlify.app/category/senior-project/">project</a> with data provided by BYU-Idaho Peer-Success Mentoring. Luckily, the provided data was already mostly in the format that I need for my project. However, no project is complete without at least some data wrangling.</p>
-<p>In this post, I’ll go through all of the steps I took to wrangle the data - from reading in the raw data to my final <a href="https://tidyr.tidyverse.org/articles/tidy-data.html">tidy</a> dataset. I’ll be using using the <a href="https://www.tidyverse.org/">tidyverse package</a>, specifically <a href="https://dplyr.tidyverse.org/">dply</a> for data manipulation and <a href="https://readxl.tidyverse.org/">readxl</a> for reading in data from an excel workbook.</p>
+<p>In this post, I’ll go through all of the steps I took to wrangle the data - from reading in the raw data to my final <a href="https://tidyr.tidyverse.org/articles/tidy-data.html">tidy</a> dataset. I’ll be using using the <a href="https://www.tidyverse.org/">tidyverse package</a>, specifically <a href="https://dplyr.tidyverse.org/">dplyr</a> for data manipulation and <a href="https://readxl.tidyverse.org/">readxl</a> for reading in data from an excel workbook.</p>
 <pre class="r"><code>#load packages
 library(dplyr) #for data wrangling
 library(readxl) #to read in .xls and .xlsx sheets.
-library(pander)
-
-#Alternatively:
-library(tidyverse) #includes dplr, readxl, and other packages that are in the tidyverse core</code></pre>
+library(pander) #to print tables in markdown
+library(tidyverse) #includes dplyr, readxl, and other packages that are in the tidyverse core</code></pre>
 <div id="project-background" class="section level2">
 <h2>Project Background</h2>
 <p>BYU-Idaho Peer-Success Mentoring provides short-term mentoring to a variety of BYU-Idaho student populations with a goal to improve student success and retention. We’re interested in looking for possible correlation between participation in mentoring and defined measures of student success, including improved GPA.</p>
