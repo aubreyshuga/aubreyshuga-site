@@ -6,7 +6,7 @@ slug: senior-project-proposal
 categories: ["Senior Project"]
 tags: []
 subtitle: ''
-summary: "For my Senior Project, I would like to perform an exploratory data analysis on student data provided by BYU-Idaho Peer-Success Mentoring. They provide short-term mentoring to a variety of BYU-Idaho student populations with a goal to improve student success and retention. We’re interested in looking for possible correlation between participation in mentoring and defined measures of student success, including improved GPA."
+summary: "Do students who participate in Peer-Success Mentoring have more success (improvement in GPA) than students who don't participate in Peer-Success Mentoring?"
 authors: []
 lastmod: '2021-02-18T05:34:24-07:00'
 featured: no
@@ -29,10 +29,12 @@ This question will be explored through various forms of data analysis, hypothesi
 
 ## Expected Tasks and Deliverables
 
- * Exploratory Data Analysis of student GPAs over 4 semesters - Mentored vs Control [(view)]()
+ * Proposal and Project Background [(view)](https://aubreyshuga.netlify.app/post/senior-project-proposal/)
+ * Data wrangling and exploration [(view)](https://aubreyshuga.netlify.app/post/wrangling-client-data/)
+ * Exploratory Visuals - Mentored vs Control [(view)]()
  * Paired Samples t-Test: "Is there an increase from Pre GPA to Post GPA for the average Tier 3 student?" [(view)]()
  * Independent Samples t-Test: "Do students in the Mentored group have a higher increase from Pre GPA to Post GPA than students in the Control group?" [(view)]()
- * Exploratory Data Analysis of different mentee "status" groups
+ * Exploratory Visuals - different mentee "status" groups
  * Paired Samples t-Test: "Is there an increase from Pre GPA to Post GPA for the average mentee in?" performed for each "status" group
  * Independent Samples t-Test: "Do mentees who fulfilled the mentoring program have a higher increase from Pre GPA to Post GPA than students in the Control group?"
  * Independent Samples t-Test: "Do mentees who fulfilled the mentoring program have a higher increase from Pre GPA to Post GPA than mentees who did not fulfill the mentoring program?"
