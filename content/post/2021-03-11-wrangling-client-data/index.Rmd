@@ -1,0 +1,494 @@
+---
+title: Wrangling Client Data
+author: Aubrey Shuga
+date: '2021-03-11'
+slug: wrangling-client-data
+categories: ["R", "Senior Project", "Data Wrangling", "tidyverse"]
+tags: ["r", "tidyverse"]
+subtitle: 'Exploratory Data Analysis - Part 1'
+summary: ''
+authors: []
+lastmod: '2021-03-11T04:19:28-07:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+I'm currently working on a [project](https://aubreyshuga.netlify.app/category/senior-project/) with data provided by BYU-Idaho Peer-Success Mentoring. Luckily, the provided data was already mostly in the format that I need for my project. However, no project is complete without at least some data wrangling.
+
+In this post, I'll go through all of the steps I took to wrangle the data - from reading in the raw data to my final [tidy](https://tidyr.tidyverse.org/articles/tidy-data.html) dataset. I'll be using using the [tidyverse package](https://www.tidyverse.org/), specifically [dply](https://dplyr.tidyverse.org/) for data manipulation and [readxl](https://readxl.tidyverse.org/) for reading in data from an excel workbook.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#load packages
+library(dplyr) #for data wrangling
+library(readxl) #to read in .xls and .xlsx sheets.
+library(pander)
+
+#Alternatively:
+library(tidyverse) #includes dplr, readxl, and other packages that are in the tidyverse core
+```
+
+## Project Background
+
+BYU-Idaho Peer-Success Mentoring provides short-term mentoring to a variety of BYU-Idaho student populations with a goal to improve student success and retention. We’re interested in looking for possible correlation between participation in mentoring and defined measures of student success, including improved GPA.
+
+The project will be focused on answering the following question: **Do students who participate in Peer-Success Mentoring have more success (improvement in GPA) than students who don’t participate in Peer-Success Mentoring?**
+
+This question will be explored through various forms of data analysis, hypothesis testing, and inferential statistics, using data about students who met defined mentoring criteria. A Control group of students who met the criteria but did not participate in mentoring will be compared with a Mentored group of students who met the same criteria and did participate in mentoring. Click [here](https://aubreyshuga.netlify.app/post/senior-project-proposal/) to read more about Peer-Success Mentoring and the background for this project.
+
+
+
+
+
+## Provided Data
+The data is stored in an excel workbook, where each tab represents a different group of potential mentee.
+
+1. **Control** (Students who met <a href="javascript:myFunction('StudentType')">Tier 3</a> mentoring criteria but opted out of mentoring)
+
+2. **Mentored** (Students who met Tier 3 mentoring criteria and participated in mentoring)
+
+3. **Referrals** (Students who were referred to the mentoring program by a faculty member)
+
+
+
+<style>
+#StudentType {
+display: none;
+background-color: ghostwhite;
+padding: 5px 0;
+}
+</style>
+
+<div id="StudentType">
+ 
+#### Tier 3
+
+Most students in the provided data are classified as "Tier 3". These students were all offered mentoring and either participated or did not participate, so they are assigned into either the Mentored or Control group.
+Tier 3 can be defined by following: "The third tier category focuses on freshmen, in particular any freshman with a 2.0 GPA or lower after their second semester. These students are referred to the [Peer-Success] Mentoring program, where they receive a personal student mentor’s help in addition to their academic advisor." [source](https://www.byui.edu/newsroom/news-and-notes/archive/3-25-19-struggling-students)
+
+#### Referral
+
+A smaller number of students in this data are classified as "Referral". These students were referred to Peer-Success Mentoring by a professor, friend, faculty member, or other person, or they signed up for mentoring on their own accord. These students do not necessarily meet the Tier 3 criteria, so the impact of mentoring might be different.
+
+<a href="javascript:myFunction('StudentType')">Click to hide definitions</a>
+
+ 
+
+</div>
+
+
+
+(Note: Mentored and Referrals are both made up of students who did participate in mentoring, so we will actually only have two groups: Control and Mentored.)
+
+Each tab in the workbook follows the same format, where each row is one student with the following columns:
+
+1. `Semester Mentored` : Semester they participated in (or opted out of) mentoring (i.e. Fall 2018)
+
+2. `Mentee Name`: Student's name (Lastname, Firstname)
+
+3. `Status` : Mentoring <a href="javascript:myFunction('Status')">Status</a> (Active Mentoring, Dropped, Fulfilled Program, or Referred to HJG/LS) 
+
+<style>
+#Status {
+display: none;
+background-color: ghostwhite;
+padding: 5px 0;
+}
+</style>
+
+
+<div id="Status">
+
+### Status Definitions
+
+Every student that meets mentoring criteria is assigned a “status” that describes where the student is at in the mentoring process. Their mentor adjusts this status as the student moves through the process. In this project, each student’s status is the status they were marked as at the end of their mentoring semester. The following statuses are included in this project:
+
+#### Attempted
+
+Students classified as "Attempted" are students who met Tier 3 criteria and were contacted by a Peer-Success Mentor but did not participate in mentoring. They could have declined mentoring or could have not responded to the mentor's contact attempts. These students are all in the control group.
+
+#### Fulfilled Program
+
+These students completed the 3-4 mentoring sessions in the program. 
+
+#### Dropped
+
+These students were dropped from the mentoring program for a variety of reasons:
+
+ * They attended one or more mentoring sessions and informed the mentor that they wanted to discontinue mentoring.
+ 
+ * They attended one or more mentoring sessions but no-showed for their remaining sessions without communicating to the mentor that they wanted to discontinue mentoring
+ 
+ * They enrolled in mentoring but no-showed for their first session without communicating to the mentor that they wanted to discontinue mentoring
+ 
+#### Referred to HJG/LS
+
+These students were referred to other peer-mentoring programs, including Heber J. Grant Mentoring and Life-Skills Mentoring. These students could have met with a Peer-Success Mentor one or more times before being referred to another program, or they could have been referred without meeting with a Peer-Success Mentor.
+
+#### Active Mentoring
+
+These students enrolled in Peer-Success Mentoring, but for some reason were never marked as "Fulfilled Program". This could be due to a variety of reasons:
+
+ * The student signed up for mentoring, but never attended any of their sessions
+ 
+ * They attended one or more mentoring sessions but then "no-showed" for their remaining sessions without communicating to the mentor that they wanted to discontinue mentoring
+ 
+ * The student actively participated in mentoring, but enrolled too late in the semester to complete enough sessions to be marked as "fulfilled" (Each semester, the mentors start over with a new list of Tier 3 students)
+ 
+ * The student was moved to another status (Fulfilled, Dropped, Referred to HJG/LS), but the mentor forgot to change the student's status in the records.
+ 
+Because of this, it is hard to know the experience that these students had. They probably do not all belong in the same group.
+
+
+<a href="javascript:myFunction('Status')">Click to hide definitions of each Status</a>
+
+</div>
+
+4. `I-Number` : Student's unique ID number
+
+5. `Student Type` : Mentoring criteria that student falls under (Tier 3 or Referral)
+
+6. `Pre 1` : Student's GPA the semester before the semester mentored
+
+7. `Semester Mentored` : Student's GPA the semester mentored
+
+8. `Post 1` : Student's GPA the semester after the semester mentored
+
+9. `Post 2` : Student's GPA 2 semesters after the semester mentored
+
+Even before reading in the data, I noticed some changes that needed to be made:
+
+ * Two columns have the same name, "Semester Mentored".
+ * There are 3 tabs, but there are really two overlapping sets of two groups: Control vs Mentored and Tier 3 vs Referral. The three tabs don't group the students in the way we need.
+ * This data includes student identifiers, such as their name and their student ID number, which need to be removed for privacy reasons.
+ * Some rows are completely blank.
+ * The column names contain spaces, which will make referencing them harder.
+
+## Read in the Data using read_excel
+
+The `read_excel()` function from the readxl package can read in data from an excel workbook to store in a dataframe.
+
+```
+#Read in the data from the client's excel sheet
+Mentored <- read_excel("Research Project- F'19.xlsx", sheet = "Tier 3 Mentored", skip = 1)
+Control <- read_excel("Research Project- F'19.xlsx", sheet = "Tier 3 Control", skip = 1)
+Referrals <- read_excel("Research Project- F'19.xlsx", sheet = "Referrals", skip = 1)
+
+Mentored %>% head() %>% pander::pander()
+```
+
+```{r echo=FALSE}
+Mentored <- data.frame(
+  `Semester Mentored...1` = rep(c("Fall 2018", "Fall 2018", NA, "Winter 2019"), 5),
+  `Mentee Name` = rep(c("Smith, Bob", "Doe, John", NA, "Doe, Jane"),5),
+  `Status` = rep(c("Active Mentoring", "Fulfilled Program", NA, "Dropped"),5),
+  `I-Number` = rep(c("111111111", "000000000", NA, "123456789"),5),
+  `Student Type` = rep(c("Tier 3", "Tier 3", NA, "Tier 3"),5),
+  `Pre 1` = rep(c(2.55, 1.12, NA, 0.00),5),
+  `Semester Mentored...7` = rep(c(2.59, 1.34, NA, 1.89),5),
+  `Post 1` = rep(c(2.64, 1.45, NA, 2.42),5),
+  `Post 2` = rep(c(NA, 2.15, NA, NA),5),
+  check.names = FALSE
+  )
+
+Referrals <- data.frame(
+  `Semester Mentored...1` = rep(c("Fall 2018", "Winter 2019", NA, "Winter 2019"), 3),
+  `Mentee Name` = rep(c("Smith, Bob", "Doe, John", NA, "Doe, Jane"),3),
+  `Status` = rep(c("Referred to HJG/LS", "Fulfilled Program", NA, "Dropped"),3),
+  `I-Number` = rep(c("111111111", "000000000", NA, "123456789"),3),
+  `Student Type` = rep(c("Referral", "Referral", NA, "Referral"),3),
+  `Pre 1` = rep(c(2.55, 1.12, NA, 0.00),3),
+  `Semester Mentored...7` = rep(c(2.59, 1.34, NA, 1.89),3),
+  `Post 1` = rep(c(2.64, 1.45, NA, 2.42),3),
+  `Post 2` = rep(c(NA, 2.15, NA, NA),3),
+  check.names = FALSE
+  )
+
+Control <- data.frame(
+  `Semester Mentored...1` = rep(c("Fall 2018", "Fall 2018", NA, "Winter 2019"), 10),
+  `Mentee Name` = rep(c("Smith, Bob", "Doe, John", NA, "Doe, Jane"),10),
+  `Status` = rep(c("Attempted", "Attempted", "NA", "Attempted"),10),
+  `I-Number` = rep(c("111111111", "000000000", "NA", "123456789"),10),
+  `Student Type` = rep(c("Tier 3", "Tier 3", "NA", "Tier 3"),10),
+  `Pre 1` = rep(c(2.55, 1.12, NA, 0.00),10),
+  `Semester Mentored...7` = rep(c(2.59, 1.34, NA, 1.89),10),
+  `Post 1` = rep(c(2.64, 1.45, NA, 2.42),10),
+  `Post 2` = rep(c(NA, 2.15, NA, NA),10),
+  check.names = FALSE
+  )
+
+Mentored %>% head(4) %>% pander::pander()
+```
+
+(For the sake of this post, I created fabricated data in the same format as the real data).
+
+## Combine the 3 Datasets
+
+Because the three groups overlap a bit, let's add a new column to specify whether that student is Mentored or Control. I used the `mutate()` function from the dplyr package for this.
+
+```{r echo=TRUE}
+#Add a column to specify which group that student belongs to.
+Mentored <- Mentored %>%
+  mutate("Group" = "Mentored")
+
+Control <- Control %>%
+  mutate("Group" = "Control")
+
+Referrals <- Referrals %>%
+  mutate("Group" = "Mentored")
+```
+
+Now that all three datasets have a `Group` column, let's combine them into one dataframe using `rbind()` function. While we're at it, let's also rename the columns to make things a bit easier going forward.
+
+```{r echo=TRUE}
+#Combine both groups into one dataframe
+Students <- rbind(Mentored, Control, Referrals) %>%
+  rename(semester_mentored = `Semester Mentored...1`,
+         `Pre_1` = `Pre 1`, 
+         `During` = `Semester Mentored...7`, 
+         `Post_1` = `Post 1`, 
+         `Post_2` = `Post 2`,
+        `Student_Type` = `Student Type`)
+```
+
+
+Finally, we need to remove the rows that have no data in them. The main reason for doing this is that later on, I'll want to count how many NA's are in each column. If there are complete rows of NA, that will mess with those counts. The full NA rows shouldn't be in there at all. To make sure we remove rows that have no student data at all, we'll check for rows where the name is "NA" and remove those. Then we know for sure that we didn't accidentally remove a student who is in the data, but is missing a GPA in some semesters.
+     
+```{r echo=TRUE}
+#Remove rows that do not have any actual mentee info
+Students <- Students %>%
+  filter(`Mentee Name` != "NA")
+```
+
+Here's what the dataset looks like so far:
+
+```{r}
+#Show row 1, 30, and 50 (for a variety of different types of mentees)
+Students[c(1,30, 50),] %>% pander()
+```
+
+
+## Creating Sample Size Labels
+
+I want to know sample sizes of each group/status and have them ready so I can easily label my plots later on. To do this, I'll first create small dataframes using `group_by()` and `summarise()` that contain a column for the sample group and a column for the size of that sample group.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+#Number of students in each Type
+sample_size_type = Students %>%
+  group_by(Student_Type) %>%
+  summarise(Type_size = n()) 
+
+sample_size_type %>% 
+  pander()
+
+#Number of students in each Type/semester mentored
+sample_size_type_sem = Students %>%
+  group_by(Student_Type, semester_mentored) %>%
+  summarise(Type_sem_size = n()) 
+
+sample_size_type_sem %>% 
+  pander()
+
+
+
+## Group Sizes ##
+
+#Number of students in each Group
+sample_size_group = Students %>%
+  group_by(Group) %>%
+  summarise(Group_size = n())
+
+sample_size_group %>% 
+  pander()
+
+#Number of students in each Group/semester mentored
+sample_size_group_sem = Students %>%
+  group_by(Group, semester_mentored) %>%
+  summarise(Group_sem_size = n()) 
+
+sample_size_group_sem %>% 
+  pander()
+
+
+
+## Status Sizes ##
+
+#Number of students in each Status
+sample_size_status = Students %>%
+  group_by(Status) %>%
+  summarise(Status_size = n()) 
+
+sample_size_status %>% 
+  pander()
+
+#Number of students in each Status/semester mentored
+sample_size_status_sem = Students %>%
+  group_by(Status, semester_mentored) %>%
+  summarise(Status_sem_size = n()) 
+
+sample_size_status_sem %>% 
+  pander()
+```
+
+
+Next, I used `left_join()` to add each sample size dataframe onto my original Students dataframe. I also used `mutate()` to make a new column with the text for the label, using the value that we just added on. After that, I no longer need the sample size dataframes, so I removed them from my environment.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#### Add sample size labels to my dataset ####
+
+Students <- Students %>%
+ 
+  ## Student Type ##
+  
+  #Add on Type sizes
+  left_join(sample_size_type) %>%
+  
+  #make new column with Type size labels
+  mutate(Type_size_label = paste0(Student_Type, "\n", "n = ", Type_size)) %>%
+  
+  #Add on Type size / semester mentored
+  left_join(sample_size_type_sem) %>%
+  
+  #make new column with Type size/semester mentored labels
+  mutate(Type_sem_size_label = paste0(Student_Type, "\n", semester_mentored, "\n", "n = ", Type_sem_size)) %>%
+  
+  
+  ## Group ##
+  
+  #Add on Group sizes
+  left_join(sample_size_group) %>%
+  
+  #make new column with Group size labels
+  mutate(Group_size_label = paste0(Group, "\n", "n = ", Group_size)) %>%
+  
+  #Add on Groups size / semester mentored
+  left_join(sample_size_group_sem) %>%
+  
+  #make new column with Group size/semester mentored labels
+  mutate(Group_sem_size_label = paste0(Group, "\n", semester_mentored, "\n", "n = ", Group_sem_size)) %>%
+  
+  
+  ## Status ##
+  
+  #Add on Status sizes
+  left_join(sample_size_status) %>%
+  
+  #make new column with Status size labels
+  mutate(Status_size_label = paste0(Status, "\n", "n = ", Status_size)) %>%
+  
+  #Add on Status sizes / semester mentored
+  left_join(sample_size_status_sem) %>%
+  
+  #make new column with Status size labels
+  mutate(Status_sem_size_label = paste0(Status, "\n", semester_mentored, "\n", "n = ", Status_sem_size))
+
+
+
+### Remove the sample size datasets to clean up my environment ###
+rm(sample_size_type,
+   sample_size_type_sem,
+   sample_size_group,
+   sample_size_group_sem,
+   sample_size_status,
+   sample_size_status_sem)
+```
+
+The dataset now has a ton of new columns:
+```{r}
+Students[c(1,30),] %>% pander()
+```
+
+Now I want to just keep the columns that are useful to me using `select()`. This will also take care of removing the student identifiers.
+
+```{r}
+Students_new <- Students %>%
+  select(Pre_1,
+         During,
+         Post_1,
+         Post_2,
+         semester_mentored,
+         Student_Type,
+         Group,
+         Status,
+         Type_size_label,
+         Type_sem_size_label,
+         Group_size_label,
+         Group_sem_size_label,
+         Status_size_label,
+         Status_sem_size_label)
+```
+
+
+## Wide and Long Formats
+
+Our data is currently in a "wide" format. It is technically not tidy, but the wide format will be useful in some cases, so I want to keep this. Later on, I'll be looking at each student's change in GPA from Pre_1 to Post_1. I'll create a column with those values now so they are ready to go when I need them.
+
+```{r}
+# Wide format data with a new column that is the change in GPA from pre1 to post 1
+Students_wide <- Students_new %>%
+  mutate(Change = Post_1 - Pre_1)
+
+Students_wide[c(1,30),] %>% pander()
+```
+
+The tidy-est version of our data will be the "long" format. Pre_1, During, Post_1, and Post_2 could be considered variables, but they are really values for the variable semester. I'll use `pivot_longer()` to turn those 4 semester GPA columns into two columns - semester and GPA.
+
+```{r}
+#We want pivot the data so that each row is only one GPA measurement (one student+one semester)
+Students_long <- Students_new  %>%
+  pivot_longer(cols = c(`Pre_1`, `During`, `Post_1`, `Post_2`), 
+               names_to = "semester", 
+               values_to = "GPA")
+
+#Reorder the semester values so they are in the right order
+Students_long <- Students_long %>%
+  mutate(semester = fct_relevel(semester,
+                                "Pre_1",
+                                "During",
+                                "Post_1",
+                                "Post_2"))
+Students_long %>% head(4) %>% pander()
+```
+
+
+Our new tidy dataframe Student_long holds all students with the following columns:
+
+ * `semester_mentored` : Semester they participated in (or opted out of) mentoring (i.e. Fall 2018)
+
+ * `Status` : Mentoring Status (Attempted, Active Mentoring, Dropped, Fulfilled Program, or Referred to HJG/LS)
+
+ * `Student Type` : Mentoring criteria that student falls under (Tier 3 or Referral)
+
+ * `Group` : Control or Mentored
+
+ * `semester` : The semester of that GPA measurement (Pre_1, During, Post_1, or Post_2)
+
+* `GPA` : Student's GPA that semester
+
+(Plus the size labels for Type, Group, and Status)
+
+## Moving Forward
+
+Now that the data is tidy and ready to go, I can use it to make [visuals]() or run [hypothesis tests](). Wrangling can be a big part of any data science project (sometimes even the biggest part!), but it is so necessary for the rest of the project to go smoothly.
+
+Check out the rest of my work on this project [here](https://aubreyshuga.netlify.app/category/senior-project/).
+
+
+
+
+
+
+<script>
+function myFunction(id) {
+    var x = document.getElementById(id);
+    if (x.style.display === "none") {
+        x.style.display = "block";
+    } else {
+        x.style.display = "none";
+    }
+}
+</script>
