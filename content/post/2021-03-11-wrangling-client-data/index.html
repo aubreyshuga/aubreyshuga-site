@@ -247,6 +247,8 @@ Referrals &lt;- Referrals %&gt;%
 <p>Now that all three datasets have a <code>Group</code> column, let’s combine them into one dataframe using <code>rbind()</code> function. While we’re at it, let’s also rename the columns to make things a bit easier going forward.</p>
 <pre class="r"><code>#Combine both groups into one dataframe
 Students &lt;- rbind(Mentored, Control, Referrals) %&gt;%
+  
+  #rename some columns
   rename(semester_mentored = `Semester Mentored...1`,
          `Pre_1` = `Pre 1`, 
          `During` = `Semester Mentored...7`, 
@@ -354,8 +356,19 @@ Students[c(1,30, 50),] %&gt;% pander()</code></pre>
 </tbody>
 </table>
 </div>
-<div id="creating-sample-size-labels" class="section level2">
-<h2>Creating Sample Size Labels</h2>
+<div id="optional-wrangling-to-aid-in-plotting" class="section level2">
+<h2>Optional Wrangling to Aid in Plotting</h2>
+<p>Later on when I create plots, I want the Status column to appear in a specific order in facets or on an axis. I can specify this order using <code>fct_relevel()</code> from the <code>forcats</code> package, which is included in the <code>tidyverse</code>.</p>
+<pre class="r"><code>#Reorder the status values so they are in the order we want for plots
+Students &lt;- Students %&gt;%
+  mutate(Status = fct_relevel(Status,
+                              &quot;Attempted&quot;,
+                              &quot;Fulfilled Program&quot;,
+                              &quot;Dropped&quot;,
+                              &quot;Referred to HJG/LS&quot;,
+                              &quot;Active Mentoring&quot;))</code></pre>
+<div id="creating-sample-size-labels" class="section level3">
+<h3>Creating Sample Size Labels</h3>
 <p>I want to know sample sizes of each group/status and have them ready so I can easily label my plots later on. To do this, I’ll first create small dataframes using <code>group_by()</code> and <code>summarise()</code> that contain a column for the sample group and a column for the size of that sample group.</p>
 <pre class="r"><code>#Number of students in each Type
 sample_size_type = Students %&gt;%
@@ -525,24 +538,24 @@ sample_size_status %&gt;%
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center">Active Mentoring</td>
-<td align="center">5</td>
-</tr>
-<tr class="even">
 <td align="center">Attempted</td>
 <td align="center">30</td>
-</tr>
-<tr class="odd">
-<td align="center">Dropped</td>
-<td align="center">8</td>
 </tr>
 <tr class="even">
 <td align="center">Fulfilled Program</td>
 <td align="center">8</td>
 </tr>
 <tr class="odd">
+<td align="center">Dropped</td>
+<td align="center">8</td>
+</tr>
+<tr class="even">
 <td align="center">Referred to HJG/LS</td>
 <td align="center">3</td>
+</tr>
+<tr class="odd">
+<td align="center">Active Mentoring</td>
+<td align="center">5</td>
 </tr>
 </tbody>
 </table>
@@ -568,24 +581,14 @@ sample_size_status_sem %&gt;%
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center">Active Mentoring</td>
-<td align="center">Fall 2018</td>
-<td align="center">5</td>
-</tr>
-<tr class="even">
 <td align="center">Attempted</td>
 <td align="center">Fall 2018</td>
 <td align="center">20</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="center">Attempted</td>
 <td align="center">Winter 2019</td>
 <td align="center">10</td>
-</tr>
-<tr class="even">
-<td align="center">Dropped</td>
-<td align="center">Winter 2019</td>
-<td align="center">8</td>
 </tr>
 <tr class="odd">
 <td align="center">Fulfilled Program</td>
@@ -598,9 +601,19 @@ sample_size_status_sem %&gt;%
 <td align="center">3</td>
 </tr>
 <tr class="odd">
+<td align="center">Dropped</td>
+<td align="center">Winter 2019</td>
+<td align="center">8</td>
+</tr>
+<tr class="even">
 <td align="center">Referred to HJG/LS</td>
 <td align="center">Fall 2018</td>
 <td align="center">3</td>
+</tr>
+<tr class="odd">
+<td align="center">Active Mentoring</td>
+<td align="center">Fall 2018</td>
+<td align="center">5</td>
 </tr>
 </tbody>
 </table>
@@ -902,6 +915,7 @@ rm(sample_size_type,
          Status_size_label,
          Status_sem_size_label)</code></pre>
 </div>
+</div>
 <div id="wide-and-long-formats" class="section level2">
 <h2>Wide and Long Formats</h2>
 <p>Our data is currently in a “wide” format. It is technically not tidy, but the wide format will be useful in some cases, so I want to keep this. Later on, I’ll be looking at each student’s change in GPA from Pre_1 to Post_1. I’ll create a column with those values now so they are ready to go when I need them.</p>
@@ -1065,7 +1079,7 @@ Students_wide[c(1,30),] %&gt;% pander()</code></pre>
 </tr>
 </tbody>
 </table>
-<p>The tidy-est version of our data will be the “long” format. Pre_1, During, Post_1, and Post_2 could be considered variables, but they are really values for the variable semester. I’ll use <code>pivot_longer()</code> to turn those 4 semester GPA columns into two columns - semester and GPA.</p>
+<p>The tidy-est version of our data will be the “long” format. Pre_1, During, Post_1, and Post_2 could be considered variables, but they are really values for the variable semester. I’ll use <code>pivot_longer()</code> to turn those 4 semester GPA columns into two columns - semester and GPA, and then <code>fct_relevel()</code> to specify the order of the semesters.</p>
 <pre class="r"><code>#We want pivot the data so that each row is only one GPA measurement (one student+one semester)
 Students_long &lt;- Students_new  %&gt;%
   pivot_longer(cols = c(`Pre_1`, `During`, `Post_1`, `Post_2`), 

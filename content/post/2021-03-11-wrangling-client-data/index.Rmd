@@ -244,6 +244,8 @@ Now that all three datasets have a `Group` column, let's combine them into one d
 ```{r echo=TRUE}
 #Combine both groups into one dataframe
 Students <- rbind(Mentored, Control, Referrals) %>%
+  
+  #rename some columns
   rename(semester_mentored = `Semester Mentored...1`,
          `Pre_1` = `Pre 1`, 
          `During` = `Semester Mentored...7`, 
@@ -251,7 +253,6 @@ Students <- rbind(Mentored, Control, Referrals) %>%
          `Post_2` = `Post 2`,
         `Student_Type` = `Student Type`)
 ```
-
 
 Finally, we need to remove the rows that have no data in them. The main reason for doing this is that later on, I'll want to count how many NA's are in each column. If there are complete rows of NA, that will mess with those counts. The full NA rows shouldn't be in there at all. To make sure we remove rows that have no student data at all, we'll check for rows where the name is "NA" and remove those. Then we know for sure that we didn't accidentally remove a student who is in the data, but is missing a GPA in some semesters.
      
@@ -269,7 +270,23 @@ Students[c(1,30, 50),] %>% pander()
 ```
 
 
-## Creating Sample Size Labels
+## Optional Wrangling to Aid in Plotting
+
+Later on when I create plots, I want the Status column to appear in a specific order in facets or on an axis. I can specify this order using `fct_relevel()` from the `forcats` package, which is included in the `tidyverse`. 
+
+```{r}
+#Reorder the status values so they are in the order we want for plots
+Students <- Students %>%
+  mutate(Status = fct_relevel(Status,
+                              "Attempted",
+                              "Fulfilled Program",
+                              "Dropped",
+                              "Referred to HJG/LS",
+                              "Active Mentoring"))
+```
+
+
+### Creating Sample Size Labels
 
 I want to know sample sizes of each group/status and have them ready so I can easily label my plots later on. To do this, I'll first create small dataframes using `group_by()` and `summarise()` that contain a column for the sample group and a column for the size of that sample group.
 
@@ -433,7 +450,7 @@ Students_wide <- Students_new %>%
 Students_wide[c(1,30),] %>% pander()
 ```
 
-The tidy-est version of our data will be the "long" format. Pre_1, During, Post_1, and Post_2 could be considered variables, but they are really values for the variable semester. I'll use `pivot_longer()` to turn those 4 semester GPA columns into two columns - semester and GPA.
+The tidy-est version of our data will be the "long" format. Pre_1, During, Post_1, and Post_2 could be considered variables, but they are really values for the variable semester. I'll use `pivot_longer()` to turn those 4 semester GPA columns into two columns - semester and GPA, and then `fct_relevel()` to specify the order of the semesters.
 
 ```{r}
 #We want pivot the data so that each row is only one GPA measurement (one student+one semester)
