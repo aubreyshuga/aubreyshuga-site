@@ -30,8 +30,8 @@ This question will be explored through various forms of data analysis, hypothesi
 ## Expected Tasks and Deliverables
 
  * Proposal and Project Background [(view)](https://aubreyshuga.netlify.app/post/senior-project-proposal/)
- * Data wrangling and exploration [(view)](https://aubreyshuga.netlify.app/post/wrangling-client-data/)
- * Exploratory Visuals - Mentored vs Control [(view)]()
+ * Data Wrangling [(view)](https://aubreyshuga.netlify.app/post/wrangling-client-data/)
+ * Exploratory Visuals - Mentored vs Control [(view)](https://aubreyshuga.netlify.app/post/exploratory-visuals/)
  * Paired Samples t-Test: "Is there an increase from Pre GPA to Post GPA for the average Tier 3 student?" [(view)]()
  * Independent Samples t-Test: "Do students in the Mentored group have a higher increase from Pre GPA to Post GPA than students in the Control group?" [(view)]()
  * Exploratory Visuals - different mentee "status" groups

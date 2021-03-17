@@ -6,7 +6,7 @@ slug: wrangling-client-data
 categories: ["R", "Senior Project", "Data Wrangling", "tidyverse"]
 tags: ["r", "tidyverse"]
 subtitle: 'Exploratory Data Analysis - Part 1'
-summary: 'A walk-through of my data wrangling process from raw excel files to a final tidy dataframe'
+summary: 'A walk-through of my data wrangling process from raw excel files to a final tidy dataframe, using data from my senior project.'
 authors: []
 lastmod: '2021-03-11T04:19:28-07:00'
 featured: no
@@ -126,25 +126,25 @@ padding: 5px 0;
 <li>Two columns have the same name, “Semester Mentored”.</li>
 <li>There are 3 tabs, but there are really two overlapping sets of two groups: Control vs Mentored and Tier 3 vs Referral. The three tabs don’t group the students in the way we need.</li>
 <li>This data includes student identifiers, such as their name and their student ID number, which need to be removed for privacy reasons.</li>
-<li>Some rows are completely blank.</li>
+<li>Some rows don’t have any student data in them.</li>
 <li>The column names contain spaces, which will make referencing them harder.</li>
 </ul>
 </div>
 <div id="read-in-the-data-using-read_excel" class="section level2">
 <h2>Read in the Data using read_excel</h2>
 <p>The <code>read_excel()</code> function from the readxl package can read in data from an excel workbook to store in a dataframe.</p>
-<pre><code>#Read in the data from the client&#39;s excel sheet
-Mentored &lt;- read_excel(&quot;Research Project- F&#39;19.xlsx&quot;, sheet = &quot;Tier 3 Mentored&quot;, skip = 1)
-Control &lt;- read_excel(&quot;Research Project- F&#39;19.xlsx&quot;, sheet = &quot;Tier 3 Control&quot;, skip = 1)
-Referrals &lt;- read_excel(&quot;Research Project- F&#39;19.xlsx&quot;, sheet = &quot;Referrals&quot;, skip = 1)
+<pre class="r"><code>#Read in the data from the client&#39;s excel sheet
+Mentored &lt;- read_excel(&quot;StudentGPAs.xlsx&quot;, sheet = &quot;Tier 3 Mentored&quot;, skip = 1)
+Control &lt;- read_excel(&quot;StudentGPAs.xlsx&quot;, sheet = &quot;Tier 3 Control&quot;, skip = 1)
+Referrals &lt;- read_excel(&quot;StudentGPAs.xlsx&quot;, sheet = &quot;Referrals&quot;, skip = 1)
 
 Mentored %&gt;% head() %&gt;% pander::pander()</code></pre>
-<table style="width:97%;">
+<table style="width:99%;">
 <caption>Table continues below</caption>
 <colgroup>
 <col width="33%" />
 <col width="19%" />
-<col width="27%" />
+<col width="29%" />
 <col width="16%" />
 </colgroup>
 <thead>
@@ -158,27 +158,39 @@ Mentored %&gt;% head() %&gt;% pander::pander()</code></pre>
 <tbody>
 <tr class="odd">
 <td align="center">Fall 2018</td>
-<td align="center">Smith, Bob</td>
+<td align="center">Student 14</td>
 <td align="center">Active Mentoring</td>
-<td align="center">111111111</td>
+<td align="center">107937214</td>
 </tr>
 <tr class="even">
 <td align="center">Fall 2018</td>
-<td align="center">Doe, John</td>
-<td align="center">Fulfilled Program</td>
-<td align="center">000000000</td>
+<td align="center">Student 57</td>
+<td align="center">Active Mentoring</td>
+<td align="center">109482852</td>
 </tr>
 <tr class="odd">
+<td align="center">Winter 2019</td>
 <td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
+<td align="center">Attempted</td>
 <td align="center">NA</td>
 </tr>
 <tr class="even">
-<td align="center">Winter 2019</td>
-<td align="center">Doe, Jane</td>
-<td align="center">Dropped</td>
-<td align="center">123456789</td>
+<td align="center">Fall 2018</td>
+<td align="center">Student 73</td>
+<td align="center">Active Mentoring</td>
+<td align="center">115113476</td>
+</tr>
+<tr class="odd">
+<td align="center">Fall 2018</td>
+<td align="center">Student 88</td>
+<td align="center">Referred to HJG/LS</td>
+<td align="center">1.29e+08</td>
+</tr>
+<tr class="even">
+<td align="center">Fall 2018</td>
+<td align="center">Student 71</td>
+<td align="center">Active Mentoring</td>
+<td align="center">136664545</td>
 </tr>
 </tbody>
 </table>
@@ -202,30 +214,44 @@ Mentored %&gt;% head() %&gt;% pander::pander()</code></pre>
 <tbody>
 <tr class="odd">
 <td align="center">Tier 3</td>
-<td align="center">2.55</td>
-<td align="center">2.59</td>
-<td align="center">2.64</td>
+<td align="center">0</td>
+<td align="center">2.1</td>
+<td align="center">0.6</td>
+<td align="center">0</td>
+</tr>
+<tr class="even">
+<td align="center">Tier 3</td>
+<td align="center">1.3</td>
+<td align="center">2.5</td>
+<td align="center">0.7</td>
+<td align="center">NA</td>
+</tr>
+<tr class="odd">
+<td align="center">Tier 3</td>
+<td align="center">NA</td>
+<td align="center">NA</td>
+<td align="center">NA</td>
 <td align="center">NA</td>
 </tr>
 <tr class="even">
 <td align="center">Tier 3</td>
-<td align="center">1.12</td>
-<td align="center">1.34</td>
-<td align="center">1.45</td>
-<td align="center">2.15</td>
+<td align="center">0.6</td>
+<td align="center">3.6</td>
+<td align="center">3.1</td>
+<td align="center">NA</td>
 </tr>
 <tr class="odd">
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
+<td align="center">Tier 3</td>
+<td align="center">1.7</td>
+<td align="center">2.3</td>
+<td align="center">3</td>
 <td align="center">NA</td>
 </tr>
 <tr class="even">
 <td align="center">Tier 3</td>
 <td align="center">0</td>
-<td align="center">1.89</td>
-<td align="center">2.42</td>
+<td align="center">3.5</td>
+<td align="center">0.2</td>
 <td align="center">NA</td>
 </tr>
 </tbody>
@@ -265,49 +291,47 @@ Students[c(1,30, 50),] %&gt;% pander()</code></pre>
 <table>
 <caption>Table continues below</caption>
 <colgroup>
-<col width="12%" />
-<col width="26%" />
+<col width="24%" />
+<col width="17%" />
+<col width="24%" />
+<col width="14%" />
 <col width="18%" />
-<col width="26%" />
-<col width="16%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
 <th align="center">semester_mentored</th>
 <th align="center">Mentee Name</th>
 <th align="center">Status</th>
 <th align="center">I-Number</th>
+<th align="center">Student_Type</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
 <td align="center">Fall 2018</td>
-<td align="center">Smith, Bob</td>
+<td align="center">Student 14</td>
 <td align="center">Active Mentoring</td>
-<td align="center">111111111</td>
+<td align="center">107937214</td>
+<td align="center">Tier 3</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Winter 2019</td>
-<td align="center">Doe, Jane</td>
-<td align="center">Attempted</td>
-<td align="center">123456789</td>
+<td align="center">Fall 2018</td>
+<td align="center">Student 41</td>
+<td align="center">Active Mentoring</td>
+<td align="center">362332643</td>
+<td align="center">Tier 3</td>
 </tr>
 <tr class="odd">
-<td align="center"><strong>50</strong></td>
-<td align="center">Winter 2019</td>
-<td align="center">Doe, John</td>
+<td align="center">Fall 2018</td>
+<td align="center">Student 29</td>
 <td align="center">Fulfilled Program</td>
-<td align="center">000000000</td>
+<td align="center">480249861</td>
+<td align="center">Tier 3</td>
 </tr>
 </tbody>
 </table>
-<table style="width:97%;">
+<table style="width:64%;">
 <colgroup>
-<col width="12%" />
-<col width="20%" />
 <col width="11%" />
 <col width="12%" />
 <col width="12%" />
@@ -316,8 +340,6 @@ Students[c(1,30, 50),] %&gt;% pander()</code></pre>
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
-<th align="center">Student_Type</th>
 <th align="center">Pre_1</th>
 <th align="center">During</th>
 <th align="center">Post_1</th>
@@ -327,30 +349,24 @@ Students[c(1,30, 50),] %&gt;% pander()</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">Tier 3</td>
-<td align="center">2.55</td>
-<td align="center">2.59</td>
-<td align="center">2.64</td>
-<td align="center">NA</td>
+<td align="center">0</td>
+<td align="center">2.1</td>
+<td align="center">0.6</td>
+<td align="center">0</td>
 <td align="center">Mentored</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Tier 3</td>
-<td align="center">0</td>
-<td align="center">1.89</td>
-<td align="center">2.42</td>
+<td align="center">1.3</td>
+<td align="center">2.8</td>
+<td align="center">1.2</td>
 <td align="center">NA</td>
-<td align="center">Control</td>
+<td align="center">Mentored</td>
 </tr>
 <tr class="odd">
-<td align="center"><strong>50</strong></td>
-<td align="center">Referral</td>
-<td align="center">1.12</td>
-<td align="center">1.34</td>
-<td align="center">1.45</td>
-<td align="center">2.15</td>
+<td align="center">1.8</td>
+<td align="center">2.7</td>
+<td align="center">0.2</td>
+<td align="center">NA</td>
 <td align="center">Mentored</td>
 </tr>
 </tbody>
@@ -391,11 +407,11 @@ sample_size_type %&gt;%
 <tbody>
 <tr class="odd">
 <td align="center">Referral</td>
-<td align="center">9</td>
+<td align="center">14</td>
 </tr>
 <tr class="even">
 <td align="center">Tier 3</td>
-<td align="center">45</td>
+<td align="center">369</td>
 </tr>
 </tbody>
 </table>
@@ -423,22 +439,22 @@ sample_size_type_sem %&gt;%
 <tr class="odd">
 <td align="center">Referral</td>
 <td align="center">Fall 2018</td>
-<td align="center">3</td>
+<td align="center">12</td>
 </tr>
 <tr class="even">
 <td align="center">Referral</td>
 <td align="center">Winter 2019</td>
-<td align="center">6</td>
+<td align="center">2</td>
 </tr>
 <tr class="odd">
 <td align="center">Tier 3</td>
 <td align="center">Fall 2018</td>
-<td align="center">30</td>
+<td align="center">200</td>
 </tr>
 <tr class="even">
 <td align="center">Tier 3</td>
 <td align="center">Winter 2019</td>
-<td align="center">15</td>
+<td align="center">169</td>
 </tr>
 </tbody>
 </table>
@@ -465,11 +481,11 @@ sample_size_group %&gt;%
 <tbody>
 <tr class="odd">
 <td align="center">Control</td>
-<td align="center">30</td>
+<td align="center">169</td>
 </tr>
 <tr class="even">
 <td align="center">Mentored</td>
-<td align="center">24</td>
+<td align="center">214</td>
 </tr>
 </tbody>
 </table>
@@ -497,22 +513,22 @@ sample_size_group_sem %&gt;%
 <tr class="odd">
 <td align="center">Control</td>
 <td align="center">Fall 2018</td>
-<td align="center">20</td>
+<td align="center">98</td>
 </tr>
 <tr class="even">
 <td align="center">Control</td>
 <td align="center">Winter 2019</td>
-<td align="center">10</td>
+<td align="center">71</td>
 </tr>
 <tr class="odd">
 <td align="center">Mentored</td>
 <td align="center">Fall 2018</td>
-<td align="center">13</td>
+<td align="center">114</td>
 </tr>
 <tr class="even">
 <td align="center">Mentored</td>
 <td align="center">Winter 2019</td>
-<td align="center">11</td>
+<td align="center">100</td>
 </tr>
 </tbody>
 </table>
@@ -539,23 +555,23 @@ sample_size_status %&gt;%
 <tbody>
 <tr class="odd">
 <td align="center">Attempted</td>
-<td align="center">30</td>
+<td align="center">169</td>
 </tr>
 <tr class="even">
 <td align="center">Fulfilled Program</td>
-<td align="center">8</td>
+<td align="center">72</td>
 </tr>
 <tr class="odd">
 <td align="center">Dropped</td>
-<td align="center">8</td>
+<td align="center">42</td>
 </tr>
 <tr class="even">
 <td align="center">Referred to HJG/LS</td>
-<td align="center">3</td>
+<td align="center">21</td>
 </tr>
 <tr class="odd">
 <td align="center">Active Mentoring</td>
-<td align="center">5</td>
+<td align="center">79</td>
 </tr>
 </tbody>
 </table>
@@ -583,37 +599,52 @@ sample_size_status_sem %&gt;%
 <tr class="odd">
 <td align="center">Attempted</td>
 <td align="center">Fall 2018</td>
-<td align="center">20</td>
+<td align="center">98</td>
 </tr>
 <tr class="even">
 <td align="center">Attempted</td>
 <td align="center">Winter 2019</td>
-<td align="center">10</td>
+<td align="center">71</td>
 </tr>
 <tr class="odd">
 <td align="center">Fulfilled Program</td>
 <td align="center">Fall 2018</td>
-<td align="center">5</td>
+<td align="center">36</td>
 </tr>
 <tr class="even">
 <td align="center">Fulfilled Program</td>
 <td align="center">Winter 2019</td>
-<td align="center">3</td>
+<td align="center">36</td>
 </tr>
 <tr class="odd">
 <td align="center">Dropped</td>
+<td align="center">Fall 2018</td>
+<td align="center">13</td>
+</tr>
+<tr class="even">
+<td align="center">Dropped</td>
 <td align="center">Winter 2019</td>
-<td align="center">8</td>
+<td align="center">29</td>
+</tr>
+<tr class="odd">
+<td align="center">Referred to HJG/LS</td>
+<td align="center">Fall 2018</td>
+<td align="center">9</td>
 </tr>
 <tr class="even">
 <td align="center">Referred to HJG/LS</td>
-<td align="center">Fall 2018</td>
-<td align="center">3</td>
+<td align="center">Winter 2019</td>
+<td align="center">12</td>
 </tr>
 <tr class="odd">
 <td align="center">Active Mentoring</td>
 <td align="center">Fall 2018</td>
-<td align="center">5</td>
+<td align="center">56</td>
+</tr>
+<tr class="even">
+<td align="center">Active Mentoring</td>
+<td align="center">Winter 2019</td>
+<td align="center">23</td>
 </tr>
 </tbody>
 </table>
@@ -680,123 +711,92 @@ rm(sample_size_type,
 <table>
 <caption>Table continues below</caption>
 <colgroup>
-<col width="12%" />
-<col width="27%" />
-<col width="18%" />
 <col width="25%" />
-<col width="16%" />
+<col width="17%" />
+<col width="23%" />
+<col width="15%" />
+<col width="18%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
 <th align="center">semester_mentored</th>
 <th align="center">Mentee Name</th>
 <th align="center">Status</th>
 <th align="center">I-Number</th>
+<th align="center">Student_Type</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
 <td align="center">Fall 2018</td>
-<td align="center">Smith, Bob</td>
+<td align="center">Student 14</td>
 <td align="center">Active Mentoring</td>
-<td align="center">111111111</td>
+<td align="center">107937214</td>
+<td align="center">Tier 3</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Winter 2019</td>
-<td align="center">Doe, Jane</td>
-<td align="center">Attempted</td>
-<td align="center">123456789</td>
+<td align="center">Fall 2018</td>
+<td align="center">Student 41</td>
+<td align="center">Active Mentoring</td>
+<td align="center">362332643</td>
+<td align="center">Tier 3</td>
 </tr>
 </tbody>
 </table>
-<table style="width:97%;">
+<table style="width:100%;">
 <caption>Table continues below</caption>
 <colgroup>
-<col width="12%" />
-<col width="20%" />
+<col width="10%" />
 <col width="11%" />
-<col width="12%" />
-<col width="12%" />
-<col width="12%" />
+<col width="11%" />
+<col width="11%" />
+<col width="14%" />
 <col width="15%" />
+<col width="23%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
-<th align="center">Student_Type</th>
 <th align="center">Pre_1</th>
 <th align="center">During</th>
 <th align="center">Post_1</th>
 <th align="center">Post_2</th>
 <th align="center">Group</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">Tier 3</td>
-<td align="center">2.55</td>
-<td align="center">2.59</td>
-<td align="center">2.64</td>
-<td align="center">NA</td>
-<td align="center">Mentored</td>
-</tr>
-<tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Tier 3</td>
-<td align="center">0</td>
-<td align="center">1.89</td>
-<td align="center">2.42</td>
-<td align="center">NA</td>
-<td align="center">Control</td>
-</tr>
-</tbody>
-</table>
-<table style="width:79%;">
-<caption>Table continues below</caption>
-<colgroup>
-<col width="12%" />
-<col width="16%" />
-<col width="25%" />
-<col width="25%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th align="center"> </th>
 <th align="center">Type_size</th>
 <th align="center">Type_size_label</th>
-<th align="center">Type_sem_size</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">45</td>
-<td align="center">Tier 3 n = 45</td>
-<td align="center">30</td>
+<td align="center">0</td>
+<td align="center">2.1</td>
+<td align="center">0.6</td>
+<td align="center">0</td>
+<td align="center">Mentored</td>
+<td align="center">369</td>
+<td align="center">Tier 3 n = 369</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">45</td>
-<td align="center">Tier 3 n = 45</td>
-<td align="center">15</td>
+<td align="center">1.3</td>
+<td align="center">2.8</td>
+<td align="center">1.2</td>
+<td align="center">NA</td>
+<td align="center">Mentored</td>
+<td align="center">369</td>
+<td align="center">Tier 3 n = 369</td>
 </tr>
 </tbody>
 </table>
-<table style="width:96%;">
+<table>
 <caption>Table continues below</caption>
 <colgroup>
-<col width="12%" />
-<col width="38%" />
-<col width="18%" />
-<col width="26%" />
+<col width="21%" />
+<col width="36%" />
+<col width="17%" />
+<col width="25%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
+<th align="center">Type_sem_size</th>
 <th align="center">Type_sem_size_label</th>
 <th align="center">Group_size</th>
 <th align="center">Group_size_label</th>
@@ -804,30 +804,28 @@ rm(sample_size_type,
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">Tier 3 Fall 2018 n = 30</td>
-<td align="center">24</td>
-<td align="center">Mentored n = 24</td>
+<td align="center">200</td>
+<td align="center">Tier 3 Fall 2018 n = 200</td>
+<td align="center">214</td>
+<td align="center">Mentored n = 214</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Tier 3 Winter 2019 n = 15</td>
-<td align="center">30</td>
-<td align="center">Control n = 30</td>
+<td align="center">200</td>
+<td align="center">Tier 3 Fall 2018 n = 200</td>
+<td align="center">214</td>
+<td align="center">Mentored n = 214</td>
 </tr>
 </tbody>
 </table>
-<table style="width:96%;">
+<table style="width:83%;">
 <caption>Table continues below</caption>
 <colgroup>
-<col width="12%" />
 <col width="23%" />
 <col width="40%" />
 <col width="19%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
 <th align="center">Group_sem_size</th>
 <th align="center">Group_sem_size_label</th>
 <th align="center">Status_size</th>
@@ -835,66 +833,42 @@ rm(sample_size_type,
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">13</td>
-<td align="center">Mentored Fall 2018 n = 13</td>
-<td align="center">5</td>
+<td align="center">114</td>
+<td align="center">Mentored Fall 2018 n = 114</td>
+<td align="center">79</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">10</td>
-<td align="center">Control Winter 2019 n = 10</td>
-<td align="center">30</td>
+<td align="center">114</td>
+<td align="center">Mentored Fall 2018 n = 114</td>
+<td align="center">79</td>
 </tr>
 </tbody>
 </table>
-<table style="width:72%;">
-<caption>Table continues below</caption>
+<table>
 <colgroup>
-<col width="12%" />
-<col width="34%" />
-<col width="25%" />
+<col width="33%" />
+<col width="23%" />
+<col width="42%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
 <th align="center">Status_size_label</th>
 <th align="center">Status_sem_size</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">Active Mentoring n = 5</td>
-<td align="center">5</td>
-</tr>
-<tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Attempted n = 30</td>
-<td align="center">10</td>
-</tr>
-</tbody>
-</table>
-<table style="width:58%;">
-<colgroup>
-<col width="12%" />
-<col width="45%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th align="center"> </th>
 <th align="center">Status_sem_size_label</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
+<td align="center">Active Mentoring n = 79</td>
+<td align="center">56</td>
 <td align="center">Active Mentoring Fall 2018 n =
-5</td>
+56</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Attempted Winter 2019 n = 10</td>
+<td align="center">Active Mentoring n = 79</td>
+<td align="center">56</td>
+<td align="center">Active Mentoring Fall 2018 n =
+56</td>
 </tr>
 </tbody>
 </table>
@@ -924,158 +898,124 @@ Students_wide &lt;- Students_new %&gt;%
   mutate(Change = Post_1 - Pre_1)
 
 Students_wide[c(1,30),] %&gt;% pander()</code></pre>
-<table>
+<table style="width:100%;">
 <caption>Table continues below</caption>
 <colgroup>
-<col width="11%" />
-<col width="10%" />
-<col width="11%" />
+<col width="9%" />
 <col width="11%" />
 <col width="11%" />
-<col width="25%" />
+<col width="11%" />
+<col width="24%" />
 <col width="18%" />
+<col width="13%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
 <th align="center">Pre_1</th>
 <th align="center">During</th>
 <th align="center">Post_1</th>
 <th align="center">Post_2</th>
 <th align="center">semester_mentored</th>
 <th align="center">Student_Type</th>
+<th align="center">Group</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">2.55</td>
-<td align="center">2.59</td>
-<td align="center">2.64</td>
+<td align="center">0</td>
+<td align="center">2.1</td>
+<td align="center">0.6</td>
+<td align="center">0</td>
+<td align="center">Fall 2018</td>
+<td align="center">Tier 3</td>
+<td align="center">Mentored</td>
+</tr>
+<tr class="even">
+<td align="center">1.3</td>
+<td align="center">2.8</td>
+<td align="center">1.2</td>
 <td align="center">NA</td>
 <td align="center">Fall 2018</td>
 <td align="center">Tier 3</td>
-</tr>
-<tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">0</td>
-<td align="center">1.89</td>
-<td align="center">2.42</td>
-<td align="center">NA</td>
-<td align="center">Winter 2019</td>
-<td align="center">Tier 3</td>
+<td align="center">Mentored</td>
 </tr>
 </tbody>
 </table>
-<table style="width:81%;">
+<table style="width:89%;">
 <caption>Table continues below</caption>
 <colgroup>
-<col width="12%" />
-<col width="15%" />
 <col width="26%" />
-<col width="26%" />
+<col width="25%" />
+<col width="37%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
-<th align="center">Group</th>
 <th align="center">Status</th>
 <th align="center">Type_size_label</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">Mentored</td>
-<td align="center">Active Mentoring</td>
-<td align="center">Tier 3 n = 45</td>
-</tr>
-<tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Control</td>
-<td align="center">Attempted</td>
-<td align="center">Tier 3 n = 45</td>
-</tr>
-</tbody>
-</table>
-<table style="width:78%;">
-<caption>Table continues below</caption>
-<colgroup>
-<col width="12%" />
-<col width="38%" />
-<col width="26%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th align="center"> </th>
 <th align="center">Type_sem_size_label</th>
-<th align="center">Group_size_label</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">Tier 3 Fall 2018 n = 30</td>
-<td align="center">Mentored n = 24</td>
+<td align="center">Active Mentoring</td>
+<td align="center">Tier 3 n = 369</td>
+<td align="center">Tier 3 Fall 2018 n = 200</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Tier 3 Winter 2019 n = 15</td>
-<td align="center">Control n = 30</td>
+<td align="center">Active Mentoring</td>
+<td align="center">Tier 3 n = 369</td>
+<td align="center">Tier 3 Fall 2018 n = 200</td>
 </tr>
 </tbody>
 </table>
-<table style="width:88%;">
+<table>
 <caption>Table continues below</caption>
 <colgroup>
-<col width="12%" />
-<col width="40%" />
-<col width="34%" />
+<col width="25%" />
+<col width="39%" />
+<col width="35%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
+<th align="center">Group_size_label</th>
 <th align="center">Group_sem_size_label</th>
 <th align="center">Status_size_label</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
-<td align="center">Mentored Fall 2018 n = 13</td>
-<td align="center">Active Mentoring n = 5</td>
+<td align="center">Mentored n = 214</td>
+<td align="center">Mentored Fall 2018 n = 114</td>
+<td align="center">Active Mentoring n = 79</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Control Winter 2019 n = 10</td>
-<td align="center">Attempted n = 30</td>
+<td align="center">Mentored n = 214</td>
+<td align="center">Mentored Fall 2018 n = 114</td>
+<td align="center">Active Mentoring n = 79</td>
 </tr>
 </tbody>
 </table>
-<table style="width:71%;">
+<table style="width:58%;">
 <colgroup>
-<col width="12%" />
 <col width="45%" />
 <col width="12%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="center"> </th>
 <th align="center">Status_sem_size_label</th>
 <th align="center">Change</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center"><strong>1</strong></td>
 <td align="center">Active Mentoring Fall 2018 n =
-5</td>
-<td align="center">0.09</td>
+56</td>
+<td align="center">0.6</td>
 </tr>
 <tr class="even">
-<td align="center"><strong>30</strong></td>
-<td align="center">Attempted Winter 2019 n = 10</td>
-<td align="center">2.42</td>
+<td align="center">Active Mentoring Fall 2018 n =
+56</td>
+<td align="center">-0.1</td>
 </tr>
 </tbody>
 </table>
@@ -1137,11 +1077,11 @@ Students_long %&gt;% head(4) %&gt;% pander()</code></pre>
 </tr>
 </tbody>
 </table>
-<table style="width:88%;">
+<table style="width:89%;">
 <caption>Table continues below</caption>
 <colgroup>
 <col width="25%" />
-<col width="36%" />
+<col width="37%" />
 <col width="26%" />
 </colgroup>
 <thead>
@@ -1153,32 +1093,32 @@ Students_long %&gt;% head(4) %&gt;% pander()</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center">Tier 3 n = 45</td>
-<td align="center">Tier 3 Fall 2018 n = 30</td>
-<td align="center">Mentored n = 24</td>
+<td align="center">Tier 3 n = 369</td>
+<td align="center">Tier 3 Fall 2018 n = 200</td>
+<td align="center">Mentored n = 214</td>
 </tr>
 <tr class="even">
-<td align="center">Tier 3 n = 45</td>
-<td align="center">Tier 3 Fall 2018 n = 30</td>
-<td align="center">Mentored n = 24</td>
+<td align="center">Tier 3 n = 369</td>
+<td align="center">Tier 3 Fall 2018 n = 200</td>
+<td align="center">Mentored n = 214</td>
 </tr>
 <tr class="odd">
-<td align="center">Tier 3 n = 45</td>
-<td align="center">Tier 3 Fall 2018 n = 30</td>
-<td align="center">Mentored n = 24</td>
+<td align="center">Tier 3 n = 369</td>
+<td align="center">Tier 3 Fall 2018 n = 200</td>
+<td align="center">Mentored n = 214</td>
 </tr>
 <tr class="even">
-<td align="center">Tier 3 n = 45</td>
-<td align="center">Tier 3 Fall 2018 n = 30</td>
-<td align="center">Mentored n = 24</td>
+<td align="center">Tier 3 n = 369</td>
+<td align="center">Tier 3 Fall 2018 n = 200</td>
+<td align="center">Mentored n = 214</td>
 </tr>
 </tbody>
 </table>
-<table style="width:74%;">
+<table style="width:76%;">
 <caption>Table continues below</caption>
 <colgroup>
-<col width="38%" />
-<col width="34%" />
+<col width="40%" />
+<col width="36%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -1188,28 +1128,28 @@ Students_long %&gt;% head(4) %&gt;% pander()</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="center">Mentored Fall 2018 n = 13</td>
-<td align="center">Active Mentoring n = 5</td>
+<td align="center">Mentored Fall 2018 n = 114</td>
+<td align="center">Active Mentoring n = 79</td>
 </tr>
 <tr class="even">
-<td align="center">Mentored Fall 2018 n = 13</td>
-<td align="center">Active Mentoring n = 5</td>
+<td align="center">Mentored Fall 2018 n = 114</td>
+<td align="center">Active Mentoring n = 79</td>
 </tr>
 <tr class="odd">
-<td align="center">Mentored Fall 2018 n = 13</td>
-<td align="center">Active Mentoring n = 5</td>
+<td align="center">Mentored Fall 2018 n = 114</td>
+<td align="center">Active Mentoring n = 79</td>
 </tr>
 <tr class="even">
-<td align="center">Mentored Fall 2018 n = 13</td>
-<td align="center">Active Mentoring n = 5</td>
+<td align="center">Mentored Fall 2018 n = 114</td>
+<td align="center">Active Mentoring n = 79</td>
 </tr>
 </tbody>
 </table>
-<table style="width:71%;">
+<table style="width:69%;">
 <colgroup>
 <col width="45%" />
 <col width="15%" />
-<col width="9%" />
+<col width="8%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -1221,27 +1161,27 @@ Students_long %&gt;% head(4) %&gt;% pander()</code></pre>
 <tbody>
 <tr class="odd">
 <td align="center">Active Mentoring Fall 2018 n =
-5</td>
+56</td>
 <td align="center">Pre_1</td>
-<td align="center">2.55</td>
+<td align="center">0</td>
 </tr>
 <tr class="even">
 <td align="center">Active Mentoring Fall 2018 n =
-5</td>
+56</td>
 <td align="center">During</td>
-<td align="center">2.59</td>
+<td align="center">2.1</td>
 </tr>
 <tr class="odd">
 <td align="center">Active Mentoring Fall 2018 n =
-5</td>
+56</td>
 <td align="center">Post_1</td>
-<td align="center">2.64</td>
+<td align="center">0.6</td>
 </tr>
 <tr class="even">
 <td align="center">Active Mentoring Fall 2018 n =
-5</td>
+56</td>
 <td align="center">Post_2</td>
-<td align="center">NA</td>
+<td align="center">0</td>
 </tr>
 </tbody>
 </table>
@@ -1258,7 +1198,7 @@ Students_long %&gt;% head(4) %&gt;% pander()</code></pre>
 </div>
 <div id="moving-forward" class="section level2">
 <h2>Moving Forward</h2>
-<p>Now that the data is tidy and ready to go, I can use it to make <a href="">visuals</a> or run <a href="">hypothesis tests</a>. Wrangling can be a big part of any data science project (sometimes even the biggest part!), but it is so necessary for the rest of the project to go smoothly.</p>
+<p>Now that the data is tidy and ready to go, I can use it to make <a href="https://aubreyshuga.netlify.app/post/exploratory-visuals/">visuals</a> or run <a href="">hypothesis tests</a>. Wrangling can be a big part of any data science project (sometimes even the biggest part!), but it is so necessary for the rest of the project to go smoothly.</p>
 <p>Check out the rest of my work on this project <a href="https://aubreyshuga.netlify.app/category/senior-project/">here</a>.</p>
 <script>
 function myFunction(id) {
