@@ -1,0 +1,363 @@
+---
+title: Exploratory Data Visualization
+author: Aubrey Shuga
+date: '2021-03-16'
+slug: exploratory-visuals
+categories: ["R", "Senior Project", "Dataviz", "tidyverse"]
+tags: ["r", "tidyverse"]
+subtitle: 'Exploratory Data Analysis - Part 2'
+summary: 'A walk-through of my data exploration and visualization process on data from my senior project.'
+authors: []
+lastmod: '2021-03-16T22:16:31-06:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>I’m currently working on a <a href="https://aubreyshuga.netlify.app/category/senior-project/">project</a> with data provided by BYU-Idaho Peer-Success Mentoring. I’ve already <a href="https://aubreyshuga.netlify.app/">wrangled the data</a> into a tidy format to use in my analysis. Next, I will be exploring the data through some visualizations.</p>
+<p>In this post, I’ll go through my exploration process, starting with a <a href="https://tidyr.tidyverse.org/articles/tidy-data.html">tidy</a> dataset and creating various plots along the way. I’ll be using using the <a href="https://www.tidyverse.org/">tidyverse package</a>, specifically <a href="https://ggplot2.tidyverse.org/">ggplot2</a> for creating graphics.</p>
+<pre class="r"><code>#load packages
+library(tidyverse) #includes dplyr, ggplot2, and other packages that are in the tidyverse core</code></pre>
+<div id="project-background" class="section level2">
+<h2>Project Background</h2>
+<p>BYU-Idaho Peer-Success Mentoring provides short-term mentoring to a variety of BYU-Idaho student populations with a goal to improve student success and retention. We’re interested in looking for possible correlation between participation in mentoring and defined measures of student success, including improved GPA.</p>
+<p>The project will be focused on answering the following question: <strong>Do students who participate in Peer-Success Mentoring have more success (improvement in GPA) than students who don’t participate in Peer-Success Mentoring?</strong></p>
+<p>This question will be explored through various forms of data analysis, hypothesis testing, and inferential statistics, using data about students who met defined mentoring criteria. A Control group of students who met the criteria but did not participate in mentoring will be compared with a Mentored group of students who met the same criteria and did participate in mentoring. Click <a href="https://aubreyshuga.netlify.app/post/senior-project-proposal/">here</a> to read more about Peer-Success Mentoring and the background for this project.</p>
+</div>
+<div id="compare-2-groups-mentored-vs-control" class="section level1">
+<h1>Compare 2 groups (Mentored vs Control)</h1>
+<p>First I want to explore the two main groups of students: <code>mentored</code> and <code>control</code>.</p>
+<div id="color-code-the-data" class="section level3">
+<h3>Color Code the Data</h3>
+<p>I want to distinguish between the two groups pretty easily on my plots, so I will be using a color for each group. Rather than use the default ggplot2 colors, I chose to use the mentoring program’s color for the Mentored group, and a contrasting color for the Control group. I’m defining them now so I can easily referencing them later on.</p>
+<pre class="r"><code>#Define colors
+mentored_col = &#39;#0B8AAD&#39;
+control_col = &quot;#21731B&quot;
+
+#Mentored Group Colors
+m_pre = &quot;#52D1F4&quot;
+m_during = &#39;#0B8AAD&#39;
+m_post = &#39;#0B8AAD&#39;
+
+#Control Group Colors
+c_pre = &quot;#90cb71&quot;
+c_during = &quot;#21731B&quot;
+c_post = &quot;#21731B&quot;</code></pre>
+</div>
+<div id="distribution" class="section level3">
+<h3>Distribution</h3>
+<p>One of the first steps I usually take when exploring new data is to look at the distribution of the target variable(s). In this case, our targets are the GPA values in four different semesters. A histogram can show how the GPA values are distributed among the students in each group for each semester.</p>
+<pre class="r"><code>Students_long %&gt;%
+  
+  ggplot(aes(x = GPA, 
+             fill = Group)) +
+  
+  geom_histogram(color = &quot;white&quot;, binwidth = 0.25, boundary = 0) +
+  
+  geom_vline(xintercept = 2.0, alpha = .8) +
+  
+  facet_grid(rows = vars(Group), cols = vars(semester), scales = &quot;fixed&quot;) +
+  
+  labs(title = &quot;Distribution of GPAs Over 4 Semesters for Each Group&quot;,
+       #subtitle = &quot;&quot;,
+       x = &quot;Semester GPA / 4.0&quot;,
+       y = &quot;# of observations&quot;) +
+  
+  scale_fill_manual(values=c(c_post, m_post)) +
+  
+  theme_bw() +
+  
+  theme(legend.position = &quot;none&quot;,
+        strip.background = element_rect(fill = &quot;white&quot;),
+        strip.text.y = element_text(angle = 0, hjust = 0))</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>It looks like in both groups, the histogram is clustered around the lower GPA end for Pre_1, with most of the data below 2.0. This makes sense because part of the Tier 3 criteria for mentoring is having a semester GPA below 2.0. Some students could have had a semester GPA above 2.0 and still met Tier 3 criteria due to their cumulative GPA or other factors, or they could have been referred to the program and did not meet Tier 3 criteria.</p>
+<p>After Pre_1, both groups spreads out to cover more GPA values above 2.0. This stark change in spread surprised me. Maybe the non-improving students became discouraged and dropped out, leaving mostly students who did improve their GPA. I want to check how many students are in each group for all the semesters to see if that’s what happened.</p>
+</div>
+<div id="value-counts" class="section level3">
+<h3>Value Counts</h3>
+<p>To see the number of GPA measurements in each group for each semester, I used the <code>group_by()</code> and <code>summarise()</code> functions. I then piped those summaries into my ggplot and used <code>geom_col()</code> to make a vertical bar chart.</p>
+<pre class="r"><code>Students_long %&gt;%
+  na.omit() %&gt;%
+  group_by(Group, semester, semester_mentored) %&gt;%
+  summarise(num = n()) %&gt;%
+  
+
+  ggplot(aes(x = semester,
+             y = num,
+             color = Group,
+             fill = Group,
+             label = num)) +
+  
+  geom_col(color = NA) +
+  
+  facet_grid(cols = vars(Group), rows = vars(semester_mentored), scales = &quot;fixed&quot;) +
+  
+  labs(title = &quot;&quot;,
+       y = &quot;Number Students who Completed that Semester&quot;,
+       x = &quot;Semester in Relation to the Semester Offered Mentoring&quot;) +
+  
+  geom_text(nudge_y = 6) +
+  
+  scale_fill_manual(values=c(c_post, m_post)) +
+  
+  scale_color_manual(values=c(c_post, m_post)) +
+  
+  theme_bw() +
+  
+  theme(legend.position = &quot;none&quot;,
+        axis.text.x = element_text(angle = 90),
+        strip.background = element_rect(fill = &quot;white&quot;),
+        strip.text.y = element_text(angle = 0))</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>This is odd. It looks as if all of these students attended 3 semesters in a row, and then many left school in the 4th semester.</p>
+<p>At first I thought this might be due to BYU-Idaho’s 3-track system, where students are assigned 2 out of the 3 semesters per year. That means that most students attend two semesters in a row and then skip a semester. However, not every student attends the same 2 semesters in a row.</p>
+<p>It would make sense that students attended both the first two semesters. They needed to attend and complete Pre_1 to meet the criteria to be offered mentoring. I wouldn’t be surprised though if many students from the Control group did not attend or complete the During semester. I’m actually a bit surprised that every single Attempted student attended the During Semester and Post_1.</p>
+<p>It could be that this data was not collected in the way I initially thought. After some discussion with the mentoring program, I found out that this was the case.</p>
+</div>
+<div id="understanding-the-data-collection-process" class="section level3">
+<h3>Understanding the Data Collection Process</h3>
+<p>It turns out that this data only includes students that had attended at least 1 additional semester after mentoring, and it only includes GPA’s from the semesters that the student attended. So if a student skipped the semester right after mentoring but returned the following semester, then that semester’s GPA was recorded for Post_1 instead of Post_2.</p>
+<p>This dataset was created between Spring 2019 and Fall 2019. This means that the only semesters included are Spring 2018, Fall 2018, Winter 2019, and Spring 2019. For students who were offered mentoring in Winter 2019, there is only data for their <code>Post_1</code> semester, which is Spring 2019. For students who were offered mentoring in Fall 2018, their <code>Post_1</code> semester could have been Winter 2019 or Spring 2019 (some students might have been off-track or deferred in Winter 2019). Their <code>Post_2</code> semester could be Spring 2019 if they attended Winter 2019 and Spring 2019, but many of them do not have a <code>Post_2</code> GPA due to either skipping Winter 2019 or skipping Spring 2019.</p>
+<p>Because most students did not attend the <code>Post_2</code> semester, I do not want to include it in this analysis. It would be interesting to use for further analysis after collecting more data.</p>
+<pre class="r"><code>Students_wide &lt;- Students_wide %&gt;%
+  select(-(&quot;Post_2&quot;))
+
+Students_long &lt;- Students_long %&gt;%
+  filter(semester != &quot;Post_2&quot;)</code></pre>
+<p>This sample of students may not be representative of all Tier 3 students, so I will need to make sure I keep the data collection process in mind later on when I test hypotheses about the data.</p>
+</div>
+<div id="diving-deeper" class="section level3">
+<h3>Diving Deeper</h3>
+<p>Now that we understand the basics of the data a bit more, let’s look more into different values.</p>
+<p>A box-and-whiskers plot is helpful to see where the four quartiles of the data lie. I used <code>geom_boxplot</code> and mapped <code>x</code> to “semester” and <code>fill</code> to “Group” to plot multiple boxplots in one chart. That way, I can compare the median and other values across all the boxplots.</p>
+<pre class="r"><code>#look at GPA distribution of both groups over 3 semesters
+Students_long %&gt;%
+  
+  ggplot(mapping = aes(x = semester, 
+                       y = GPA, 
+                       fill = Group)) +
+  
+  geom_boxplot(alpha = .8) +
+  
+  scale_fill_manual(values=c(c_post, m_post)) +
+  
+  scale_color_manual(values=c(c_post, m_post)) +
+  
+  labs(title = &quot;GPA Distributions for Each Group Across 3 Semesters&quot;) +
+  
+  theme_minimal() +
+  theme(legend.position = &quot;bottom&quot;)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>For both groups, over 75% of the students had GPA’s below 2.0 during Pre_1, while only ~50% of the students had GPA’s below 2.0 in During. In Post_1, the Control group shifted back down - around 75% of students had a GPA below 2.5. The Mentored group, however, shifted up. Over half of the Mentored Students had a GPA above 2.0, and 25% of them had a GPA above 3.0.</p>
+</div>
+<div id="individual-points" class="section level3">
+<h3>Individual Points</h3>
+<p>I’d like to look more at the individual points next. I’ll create a strip plot using <code>geom_jitter()</code> instead of <code>geom_point()</code>.</p>
+<pre class="r"><code>#Strip plot of GPAs for two groups across 3 semesters
+
+ggplot(data = Students_long, mapping = aes(x = Group, y = GPA, col = Group)) +
+  
+  geom_jitter(width = .3, height = 0.01, alpha = .8) +
+  
+  facet_wrap(facets = ~semester, nrow = 1) +
+  
+  labs(title = &quot;GPA Distributions for Each Group Across 3 Semesters&quot;, x = &quot;&quot;) +
+  
+  scale_color_manual(values=c(c_post, m_post)) +
+  
+  theme_bw() +
+  
+  theme(legend.position = &quot;bottom&quot;,
+        strip.background = element_rect(fill = &quot;white&quot;, 
+                                        color = &quot;white&quot;))</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>A lot of the points are on 0 for all of the semesters. Like we saw in the boxplots, most of the Pre_1 GPA’s for both groups are below 2.0, and the GPA’s are evenly split above and below 2.0 for the later semesters.</p>
+</div>
+<div id="putting-it-together" class="section level3">
+<h3>Putting it together</h3>
+<p>If we put the points and the boxplots together, we can see each point in context with the 4 quartiles.</p>
+<pre class="r"><code>#look at GPA distribution of both groups over 3 semesters
+
+Students_long %&gt;%
+  
+  ggplot(mapping = aes(x = semester, 
+                       y = GPA, 
+                       fill = Group,
+                       color = Group)) +
+  
+  geom_boxplot(alpha = .2, color = &quot;black&quot;) +
+  
+  geom_jitter(width = .3, height = 0, alpha = .7, size = .85) +
+  
+  facet_wrap(facets = ~Group_size_label, nrow=1) +
+  
+  scale_fill_manual(values=c(c_post, m_post)) +
+  
+  scale_color_manual(values=c(c_post, m_post)) +
+  
+  labs(title = &quot;GPA Distributions for Each Group Across 3 Semesters&quot;) +
+  
+  theme_minimal() +
+  
+  theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+</div>
+</div>
+<div id="change-in-gpa" class="section level1">
+<h1>Change in GPA</h1>
+<p>While the above plots give us some insight into the data, we’re wanting to know about GPA change on an individual level. How did each student’s GPA change from Pre_1 to Post_1?</p>
+<div id="first-look" class="section level3">
+<h3>First look</h3>
+<p>The following plots show the ties between each students’ Pre and Post GPA’s, along with the distribution of all Pre and all Post GPAs. I used <code>libary(raincloudplots)</code> to create these. (See more details and a walkthrough in this <a href="https://aubreyshuga.netlify.app/post/exploring-the-raincloudplots-package-2/">post.</a> )</p>
+<pre class="r"><code>library(raincloudplots)
+
+# Create Mentored Pre-Post 1x1
+Mentored_pre_post &lt;- data_1x1( 
+  array_1 = Mentored$`Pre 1`, #first set of values
+  array_2 = Mentored$`Post 1`, #second set of values
+  jit_distance = .09,
+  jit_seed = 321) 
+# Mentored Pre-Post 1x1 raincloud plot - ties
+M_pre_post_ties &lt;- raincloud_1x1_repmes(
+  data = Mentored_pre_post,
+  colors = (c(m_pre, m_post)), 
+  fills = (c(m_pre, m_post)), 
+  line_color = &#39;gray&#39;,
+  line_alpha = .3,
+  size = 1.5,
+  alpha = .5,
+  align_clouds = FALSE) +
+  scale_x_continuous(breaks=c(1,2), labels=c(&quot;Pre 1&quot;, &quot;Post 1&quot;), limits=c(0, 3)) +
+  xlab(&quot;Semester&quot;) + 
+  ylab(&quot;GPA&quot;) +
+  labs(title = &quot;Pre and Post GPAs of Mentored Students&quot;) +
+  theme_classic()
+
+
+# Create Control Pre-Post 1x1
+Control_pre_post &lt;- data_1x1( 
+  array_1 = Control$`Pre 1`, #first set of values
+  array_2 = Control$`Post 1`, #second set of values
+  jit_distance = .09,
+  jit_seed = 321) 
+# Control Pre-Post 1x1 raincloud plot - ties
+C_pre_post_ties &lt;- raincloud_1x1_repmes(
+  data = Control_pre_post,
+  colors = (c(c_pre, c_post)), 
+  fills = (c(c_pre, c_post)), 
+  line_color = &#39;gray&#39;,
+  line_alpha = .3,
+  size = 1.5,
+  alpha = .5,
+  align_clouds = FALSE) +
+  scale_x_continuous(breaks=c(1,2), labels=c(&quot;Pre 1&quot;, &quot;Post 1&quot;), limits=c(0, 3)) +
+  xlab(&quot;Semester&quot;) + 
+  ylab(&quot;GPA&quot;) +
+  labs(title = &quot;Pre and Post GPAs of Control Students&quot;) +
+  theme_classic()
+
+M_pre_post_ties</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre class="r"><code>C_pre_post_ties</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-10-2.png" width="672" /></p>
+</div>
+<div id="change-from-pre_1-to-post_1" class="section level3">
+<h3>Change from Pre_1 to Post_1</h3>
+<p>After calculating the change in GPA from Pre_1 to Post_1 for each student, we can compare the changes for both groups.</p>
+<pre class="r"><code>library(see) #for geom_violinhalf
+
+Students_wide %&gt;%
+  
+  ggplot(mapping = aes(x = Group_size_label,
+                       y = Change,
+                       fill = Group,
+                       color = Group
+                       )) +
+  
+  geom_violinhalf(alpha = .5, 
+                  color = &quot;black&quot;,
+                  position = position_nudge(x = .25, y = 0)) +
+  
+  geom_boxplot(alpha = .2, 
+               color = &quot;black&quot;, 
+               width = 0.4) +
+  
+  geom_jitter(height = 0, 
+              size = .85, 
+              width = .2) +
+  
+  geom_abline(slope = 0, 
+              intercept = 0, 
+              color = &quot;red&quot;, 
+              lty = 2) +
+  
+  labs(title = &quot;Change in GPA from Pre 1 to Post 1&quot;,
+       x = &quot;&quot;,
+       y = &quot;Change in GPA&quot;) +
+  
+  scale_fill_manual(values=c(c_post, m_post)) +
+  
+  scale_color_manual(values=c(c_post, m_post)) +
+  
+  theme_minimal() +
+  
+  theme(legend.position = &quot;none&quot;,
+        axis.text.x = element_text(size = 15))</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>According to the plot, most of the students in the dataset improved their GPAs from Pre 1 to Post 1.</p>
+<p>For the Control group, 25% of the students showed large improvement of ~1.6 points or more. 25% of students’ improvement was between ~0.5 points and ~1.6 points. 25% of the students had minimal change in GPA (increased or decreased by ~0.5 points or less). The last 25% of students showed a decrease in GPA from the Pre 1 semester to the Post 2 semester.</p>
+<p>For the Mentored group, almost 75% of the students improved. 25% of the students showed large improvement of ~2.1 points or more. 25% of students’ improvement was between ~1.2 points and ~2.1 points. 25% of the students improved by ~1.2 points or less. The last 25% of students showed a decrease in GPA from the Pre 1 semester to the Post 2 semester.</p>
+<pre class="r"><code>Students_wide %&gt;%
+  group_by(Group) %&gt;%
+  summarise(`Mean Change` = mean(Change),
+            `Median Change` = median(Change),
+            `Max Change` = max(Change),
+            `Min Change` = min((Change)),
+            `Count` = n()) %&gt;%
+  knitr::kable(&quot;markdown&quot;)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Group</th>
+<th align="right">Mean Change</th>
+<th align="right">Median Change</th>
+<th align="right">Max Change</th>
+<th align="right">Min Change</th>
+<th align="right">Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Control</td>
+<td align="right">0.600000</td>
+<td align="right">0.5</td>
+<td align="right">3.9</td>
+<td align="right">-2.0</td>
+<td align="right">169</td>
+</tr>
+<tr class="even">
+<td align="left">Mentored</td>
+<td align="right">1.099533</td>
+<td align="right">1.2</td>
+<td align="right">3.9</td>
+<td align="right">-3.2</td>
+<td align="right">214</td>
+</tr>
+</tbody>
+</table>
+<p>Both the mean and the median change in the Mentored group are a good amount higher than the mean and median change in the Control group.</p>
+</div>
+</div>
+<div id="next-steps" class="section level1">
+<h1>Next Steps</h1>
+<p>The next step will be to run some hypothesis tests to see if there is a significant difference between these two groups.</p>
+<p>Further analysis will include exploring the different <code>Status</code> groups and possibly running hypothesis tests on those, as well as exploring the success of <code>Referral</code> students vs <code>Tier 3</code> students.</p>
+<p>Check out the rest of my work on this project <a href="https://aubreyshuga.netlify.app/category/senior-project/">here</a>.</p>
+</div>
