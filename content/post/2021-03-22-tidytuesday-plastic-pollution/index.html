@@ -1,0 +1,668 @@
+---
+title: '#TidyTuesday - Plastic Pollution'
+author: Aubrey Shuga
+date: '2021-02-01'
+slug: tidytuesday-plastic-pollution
+categories: []
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+featured: no
+lastmod: ''
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p><img src="https://www.breakfreefromplastic.org/wp-content/uploads/2019/08/header_bffp_2019w.jpg" /></p>
+<div id="intro" class="section level1">
+<h1>Intro</h1>
+<pre class="r"><code>library(tidytuesdayR)
+library(tidyverse)
+library(knitr)</code></pre>
+<p><a href="https://github.com/sarahsauve/TidyTuesdays/blob/master/BFFPDashboard/BlogPost.md">blogpost</a></p>
+<p><a href="https://github.com/rfordatascience/tidytuesday/blob/master/data/2021/2021-01-26/readme.md">Challenge intro</a></p>
+<p><a href="https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv">data</a></p>
+<p><a href="https://github.com/rfordatascience/tidytuesday">Tidy Tuesday</a></p>
+</div>
+<div id="the-data" class="section level1">
+<h1>The Data</h1>
+<p>Tidy Tuesday provides the following code to load in the data:</p>
+<pre class="r"><code># Get the Data
+
+# Read in with tidytuesdayR package 
+# Install from CRAN via: install.packages(&quot;tidytuesdayR&quot;)
+# This loads the readme and all the datasets for the week of interest
+
+# Either ISO-8601 date or year/week works!
+
+tuesdata &lt;- tidytuesdayR::tt_load(&#39;2021-01-26&#39;)
+tuesdata &lt;- tidytuesdayR::tt_load(2021, week = 5)
+
+plastics &lt;- tuesdata$plastics
+
+# Or read in the data manually
+
+plastics &lt;- readr::read_csv(&#39;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv&#39;)
+</code></pre>
+<p>Since there are a few options, I decided to use the tidytuesdayR package option. That way, I can work with any other Tidy Tuesday data without having to find the link. I just need to know the week number.</p>
+<pre class="r"><code>#tuesdata &lt;- tidytuesdayR::tt_load(2021, week = 5) #load in this week&#39;s data</code></pre>
+<p><code>tuesdata</code> is a list where the first item is our dataframe, so we’ll need to extract the plastics item from the list and save it.</p>
+<pre class="r"><code>#plastics &lt;- tuesdata$plastics #grab the plastics item from the list and save it as plastics (this is our data)</code></pre>
+<p>Note: I ended up having to use the other option sometimes when I had too many github requests</p>
+<pre class="r"><code>plastics &lt;- readr::read_csv(&#39;https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv&#39;)</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   country = col_character(),
+##   year = col_double(),
+##   parent_company = col_character(),
+##   empty = col_double(),
+##   hdpe = col_double(),
+##   ldpe = col_double(),
+##   o = col_double(),
+##   pet = col_double(),
+##   pp = col_double(),
+##   ps = col_double(),
+##   pvc = col_double(),
+##   grand_total = col_double(),
+##   num_events = col_double(),
+##   volunteers = col_double()
+## )</code></pre>
+<p>If we peek at the data, it looks like each row is a <code>country</code>-<code>year</code>-<code>parent_company</code> combination. This data only contains 2019 and 2020.</p>
+<pre class="r"><code>plastics %&gt;% head() %&gt;% knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">country</th>
+<th align="right">year</th>
+<th align="left">parent_company</th>
+<th align="right">empty</th>
+<th align="right">hdpe</th>
+<th align="right">ldpe</th>
+<th align="right">o</th>
+<th align="right">pet</th>
+<th align="right">pp</th>
+<th align="right">ps</th>
+<th align="right">pvc</th>
+<th align="right">grand_total</th>
+<th align="right">num_events</th>
+<th align="right">volunteers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Argentina</td>
+<td align="right">2019</td>
+<td align="left">Grand Total</td>
+<td align="right">0</td>
+<td align="right">215</td>
+<td align="right">55</td>
+<td align="right">607</td>
+<td align="right">1376</td>
+<td align="right">281</td>
+<td align="right">116</td>
+<td align="right">18</td>
+<td align="right">2668</td>
+<td align="right">4</td>
+<td align="right">243</td>
+</tr>
+<tr class="even">
+<td align="left">Argentina</td>
+<td align="right">2019</td>
+<td align="left">Unbranded</td>
+<td align="right">0</td>
+<td align="right">155</td>
+<td align="right">50</td>
+<td align="right">532</td>
+<td align="right">848</td>
+<td align="right">122</td>
+<td align="right">114</td>
+<td align="right">17</td>
+<td align="right">1838</td>
+<td align="right">4</td>
+<td align="right">243</td>
+</tr>
+<tr class="odd">
+<td align="left">Argentina</td>
+<td align="right">2019</td>
+<td align="left">The Coca-Cola Company</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">222</td>
+<td align="right">35</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">257</td>
+<td align="right">4</td>
+<td align="right">243</td>
+</tr>
+<tr class="even">
+<td align="left">Argentina</td>
+<td align="right">2019</td>
+<td align="left">Secco</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">39</td>
+<td align="right">4</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">43</td>
+<td align="right">4</td>
+<td align="right">243</td>
+</tr>
+<tr class="odd">
+<td align="left">Argentina</td>
+<td align="right">2019</td>
+<td align="left">Doble Cola</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">38</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">38</td>
+<td align="right">4</td>
+<td align="right">243</td>
+</tr>
+<tr class="even">
+<td align="left">Argentina</td>
+<td align="right">2019</td>
+<td align="left">Pritty</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">22</td>
+<td align="right">7</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">29</td>
+<td align="right">4</td>
+<td align="right">243</td>
+</tr>
+</tbody>
+</table>
+<p>Tidy Tuesday also provides a Data Dictionary that explains each column in the dataset:</p>
+<div id="data-dictionary" class="section level3">
+<h3>Data Dictionary</h3>
+<p>The plastic is categorized by <a href="https://en.wikipedia.org/wiki/Recycling_codes">recycling codes</a>.</p>
+<p><code>plastics.csv</code></p>
+<table>
+<colgroup>
+<col width="20%" />
+<col width="20%" />
+<col width="60%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">variable</th>
+<th align="left">class</th>
+<th align="left">description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">country</td>
+<td align="left">character</td>
+<td align="left">Country of cleanup</td>
+</tr>
+<tr class="even">
+<td align="left">year</td>
+<td align="left">double</td>
+<td align="left">Year (2019 or 2020)</td>
+</tr>
+<tr class="odd">
+<td align="left">parent_company</td>
+<td align="left">character</td>
+<td align="left">Source of plastic</td>
+</tr>
+<tr class="even">
+<td align="left">empty</td>
+<td align="left">double</td>
+<td align="left">Category left empty count</td>
+</tr>
+<tr class="odd">
+<td align="left">hdpe</td>
+<td align="left">double</td>
+<td align="left">High density polyethylene count (Plastic milk containers, plastic bags, bottle caps, trash cans, oil cans, plastic lumber, toolboxes, supplement containers)</td>
+</tr>
+<tr class="even">
+<td align="left">ldpe</td>
+<td align="left">double</td>
+<td align="left">Low density polyethylene count (Plastic bags, Ziploc bags, buckets, squeeze bottles, plastic tubes, chopping boards)</td>
+</tr>
+<tr class="odd">
+<td align="left">o</td>
+<td align="left">double</td>
+<td align="left">Category marked other count</td>
+</tr>
+<tr class="even">
+<td align="left">pet</td>
+<td align="left">double</td>
+<td align="left">Polyester plastic count (Polyester fibers, soft drink bottles, food containers (also see plastic bottles)</td>
+</tr>
+<tr class="odd">
+<td align="left">pp</td>
+<td align="left">double</td>
+<td align="left">Polypropylene count (Flower pots, bumpers, car interior trim, industrial fibers, carry-out beverage cups, microwavable food containers, DVD keep cases)</td>
+</tr>
+<tr class="even">
+<td align="left">ps</td>
+<td align="left">double</td>
+<td align="left">Polystyrene count (Toys, video cassettes, ashtrays, trunks, beverage/food coolers, beer cups, wine and champagne cups, carry-out food containers, Styrofoam)</td>
+</tr>
+<tr class="odd">
+<td align="left">pvc</td>
+<td align="left">double</td>
+<td align="left">PVC plastic count (Window frames, bottles for chemicals, flooring, plumbing pipes)</td>
+</tr>
+<tr class="even">
+<td align="left">grand_total</td>
+<td align="left">double</td>
+<td align="left">Grand total count (all types of plastic)</td>
+</tr>
+<tr class="odd">
+<td align="left">num_events</td>
+<td align="left">double</td>
+<td align="left">Number of counting events</td>
+</tr>
+<tr class="even">
+<td align="left">volunteers</td>
+<td align="left">double</td>
+<td align="left">Number of volunteers</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="data-summary" class="section level3">
+<h3>Data Summary</h3>
+<p>We can use <code>skimr::skim()</code> to see a summary of the data, including the number of rows and columns, column types, and some summary stats for each column.</p>
+<pre class="r"><code>skimr::skim(plastics) #print a summary of the data</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-7">Table 1: </span>Data summary</caption>
+<tbody>
+<tr class="odd">
+<td align="left">Name</td>
+<td align="left">plastics</td>
+</tr>
+<tr class="even">
+<td align="left">Number of rows</td>
+<td align="left">13380</td>
+</tr>
+<tr class="odd">
+<td align="left">Number of columns</td>
+<td align="left">14</td>
+</tr>
+<tr class="even">
+<td align="left">_______________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Column type frequency:</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">character</td>
+<td align="left">2</td>
+</tr>
+<tr class="odd">
+<td align="left">numeric</td>
+<td align="left">12</td>
+</tr>
+<tr class="even">
+<td align="left">________________________</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">Group variables</td>
+<td align="left">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: character</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">min</th>
+<th align="right">max</th>
+<th align="right">empty</th>
+<th align="right">n_unique</th>
+<th align="right">whitespace</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">country</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="right">50</td>
+<td align="right">0</td>
+<td align="right">69</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">parent_company</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">84</td>
+<td align="right">0</td>
+<td align="right">10823</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">skim_variable</th>
+<th align="right">n_missing</th>
+<th align="right">complete_rate</th>
+<th align="right">mean</th>
+<th align="right">sd</th>
+<th align="right">p0</th>
+<th align="right">p25</th>
+<th align="right">p50</th>
+<th align="right">p75</th>
+<th align="right">p100</th>
+<th align="left">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">year</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">2019.31</td>
+<td align="right">0.46</td>
+<td align="right">2019</td>
+<td align="right">2019</td>
+<td align="right">2019</td>
+<td align="right">2020</td>
+<td align="right">2020</td>
+<td align="left">▇▁▁▁▃</td>
+</tr>
+<tr class="even">
+<td align="left">empty</td>
+<td align="right">3243</td>
+<td align="right">0.76</td>
+<td align="right">0.41</td>
+<td align="right">22.59</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2208</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">hdpe</td>
+<td align="right">1646</td>
+<td align="right">0.88</td>
+<td align="right">3.05</td>
+<td align="right">66.12</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">3728</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td align="left">ldpe</td>
+<td align="right">2077</td>
+<td align="right">0.84</td>
+<td align="right">10.32</td>
+<td align="right">194.64</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">11700</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">o</td>
+<td align="right">267</td>
+<td align="right">0.98</td>
+<td align="right">49.61</td>
+<td align="right">1601.99</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="right">120646</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td align="left">pet</td>
+<td align="right">214</td>
+<td align="right">0.98</td>
+<td align="right">20.94</td>
+<td align="right">428.16</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">36226</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">pp</td>
+<td align="right">1496</td>
+<td align="right">0.89</td>
+<td align="right">8.22</td>
+<td align="right">141.81</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">6046</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td align="left">ps</td>
+<td align="right">1972</td>
+<td align="right">0.85</td>
+<td align="right">1.86</td>
+<td align="right">39.74</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2101</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">pvc</td>
+<td align="right">4328</td>
+<td align="right">0.68</td>
+<td align="right">0.35</td>
+<td align="right">7.89</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">622</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="even">
+<td align="left">grand_total</td>
+<td align="right">14</td>
+<td align="right">1.00</td>
+<td align="right">90.15</td>
+<td align="right">1873.68</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">6</td>
+<td align="right">120646</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+<tr class="odd">
+<td align="left">num_events</td>
+<td align="right">0</td>
+<td align="right">1.00</td>
+<td align="right">33.37</td>
+<td align="right">44.71</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="right">15</td>
+<td align="right">42</td>
+<td align="right">145</td>
+<td align="left">▇▃▁▁▂</td>
+</tr>
+<tr class="even">
+<td align="left">volunteers</td>
+<td align="right">107</td>
+<td align="right">0.99</td>
+<td align="right">1117.65</td>
+<td align="right">1812.40</td>
+<td align="right">1</td>
+<td align="right">114</td>
+<td align="right">400</td>
+<td align="right">1416</td>
+<td align="right">31318</td>
+<td align="left">▇▁▁▁▁</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</div>
+</div>
+<div id="data-wrangling" class="section level1">
+<h1>Data Wrangling</h1>
+<p>The first step I’d like to take is renaming the columns using the information in the data dictionary. This will help me to remember what each column means.</p>
+<pre class="r"><code>plastics_new &lt;- plastics %&gt;%
+  rename(&quot;empty_count&quot; = &quot;empty&quot;,
+         &quot;high_density_polyethylene_count&quot; = &quot;hdpe&quot;,
+         &quot;low_density_polyethylene_count&quot; = &quot;ldpe&quot;,
+         &quot;other_count&quot; = &quot;o&quot;,
+         &quot;polyester_plastic_count&quot; = &quot;pet&quot;,
+         &quot;polypropylene_count&quot; = &quot;pp&quot;,
+         &quot;polystyrene_count&quot; = &quot;ps&quot;,
+         &quot;pvc_plastic_count&quot; = &quot;pvc&quot;,
+         &quot;total_plastic_count&quot; = &quot;grand_total&quot;, #I&#39;m renaming this because there is also a country called &quot;Grand Total&quot; and I don&#39;t want to mix them up
+         &quot;times_counted&quot; = &quot;num_events&quot;)
+  
+  # #rename some values that are the same but have diff names
+  # mutate(parent_company = gsub(&quot;estle&quot;, &quot;estlé&quot;, parent_company),
+  #        parent_company = gsub(&quot;PT Mayora Indah Tbk&quot;, &quot;Mayora Indah&quot;, parent_company),
+  #        parent_company = gsub(&quot;Pepsico&quot;, &quot;PepsiCo&quot;, parent_company))</code></pre>
+</div>
+<div id="viz" class="section level1">
+<h1>Viz</h1>
+<p>I’m interested in which parent companies create the most plastic pollution. Here is the code for my final plot:</p>
+<pre class="r"><code>#I want to look at the top 10 `parent_company`s with the highest total `total_plastic_count` (of all countries and years)
+
+#Create new dataframe to use for my plot
+p_dat &lt;- plastics_new %&gt;% 
+  
+  #Get total `total_plastic_count` for each company
+  group_by(parent_company) %&gt;%
+  summarise(total_plastic_count = sum(total_plastic_count)) %&gt;%
+  
+  #Remove any parent_company where the name isn&#39;t actually 1 company 
+  filter(!parent_company %in% c(&quot;null&quot;,&quot;NULL&quot;,&quot;Grand Total&quot;,&quot;Unbranded&quot;, &quot;Assorted&quot;)) %&gt;%
+  
+  #Keep the rows with the top 10 total_plastic_count values
+  slice_max(order_by = total_plastic_count, n = 10) %&gt;%
+  
+  #Turn all &quot; &quot; and &quot;-&quot; into &quot;\n&quot; to fit more on one line
+  mutate(parent_company = gsub(&quot;Tamil Nadu Co-operative Milk Producers&#39; Federation Ltd&quot;, &quot;Tamil Nadu Co-operative \nMilk Producers&#39; Federation Ltd&quot;, parent_company))
+  
+
+#Create my plot
+p &lt;- p_dat %&gt;%
+  ggplot() +
+  
+  #Add a point for each company&#39;s count
+  geom_point(aes(y = reorder(parent_company, total_plastic_count),
+                 x = total_plastic_count,
+                 col = parent_company),
+                size = 15) +
+  
+  #Add a line for each company (lollipop chart)
+  geom_segment(aes(y = parent_company,
+                   yend = parent_company,
+                   x = 0,
+                   xend = total_plastic_count,
+                   col = parent_company),
+                  size = 2) +
+  
+  geom_text(aes(y = reorder(parent_company, total_plastic_count),
+                x = total_plastic_count,
+                label = total_plastic_count),
+            size = 4,
+            col = &quot;white&quot;,
+            fontface = &quot;bold&quot;) +
+  
+  #scale the y-axis on a log scale so the values aren&#39;t as spread out
+  # scale_y_continuous(trans=&#39;log10&#39;, 
+  #                    breaks = scales::trans_breaks(&quot;log10&quot;, function(x) 10^x),
+  #                    labels = scales::trans_format(&quot;log2&quot;,
+  #                                                  scales::math_format(10^.x))) +
+  
+  #Add all my labels
+  labs(title = &quot;Top 10 Creators of Plastic Pollutions Worldwide&quot;, 
+       subtitle = &quot;Out of all cleanup events in 2019 and 2020, these 10 companies had the most plastic items that were made by the company.&quot;,
+       caption = &quot;Data from breakfreefromplastic.org | Viz by Aubrey Shuga&quot;,
+       y = &quot;Company&quot;, 
+       x = &quot;Number of Plastic Items Found&quot;) +
+  
+  #All theme elements
+  theme(legend.position =&quot;none&quot;,
+        panel.background = element_blank(), #remove gray background
+        axis.text.y = element_text(face = &quot;bold&quot;, size = 10), #no y-axis tick labels
+        axis.ticks.y = element_blank(), #no y-axis tick marks
+        axis.ticks.x = element_blank()) #no x-axis tick marks
+p
+
+
+#save each plot iteration so I can create a gif at the end
+ggsave(plot = p, filename = file.path(&quot;iterations&quot;, paste0(Sys.time(),&quot;.png&quot;))) </code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+</div>
+<div id="gif" class="section level1">
+<h1>Gif</h1>
+<p>While creating my viz for this week, I saved a copy of each iteration. I now want to create a gif to show how my plot chnaged from my initial stab at it to my final plot. <a href="http://www.nagraj.net/notes/gifs-in-r/">some steps taken from this tutorial</a></p>
+<pre class="r"><code>library(magick)
+
+## list file names in interations folder
+imgs &lt;- list.files(&quot;iterations&quot;, full.names = TRUE)
+
+#For each filename in imgs, read the image and store it in img_list
+img_list &lt;- lapply(imgs, image_read)
+
+## join the images together
+img_joined &lt;- image_join(img_list)
+
+## animate at 2 frames per second
+img_animated &lt;- image_animate(img_joined, fps = 4)
+
+## view animated image
+img_animated
+
+## save to disk
+image_write(image = img_animated,
+            path = &quot;plastic_pollution.gif&quot;)</code></pre>
+<p><img src="plastic_pollution.gif" /></p>
+<p>You can see that I wanted to add more, but I ended up giving up and going back to an earlier iteration.</p>
+</div>

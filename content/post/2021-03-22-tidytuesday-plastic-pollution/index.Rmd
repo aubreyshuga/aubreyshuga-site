@@ -1,0 +1,330 @@
+---
+title: '#TidyTuesday - Plastic Pollution'
+author: Aubrey Shuga
+date: '2021-02-01'
+slug: tidytuesday-plastic-pollution
+categories: []
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+featured: no
+lastmod: ''
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+
+![](https://www.breakfreefromplastic.org/wp-content/uploads/2019/08/header_bffp_2019w.jpg)
+
+# Intro
+
+```{r message=FALSE, warning=FALSE}
+library(tidytuesdayR)
+library(tidyverse)
+library(knitr)
+```
+
+[blogpost](https://github.com/sarahsauve/TidyTuesdays/blob/master/BFFPDashboard/BlogPost.md)
+
+[Challenge intro](https://github.com/rfordatascience/tidytuesday/blob/master/data/2021/2021-01-26/readme.md)
+
+[data](https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv)
+
+[Tidy Tuesday](https://github.com/rfordatascience/tidytuesday)
+
+
+# The Data
+
+Tidy Tuesday provides the following code to load in the data:
+
+```r
+# Get the Data
+
+# Read in with tidytuesdayR package 
+# Install from CRAN via: install.packages("tidytuesdayR")
+# This loads the readme and all the datasets for the week of interest
+
+# Either ISO-8601 date or year/week works!
+
+tuesdata <- tidytuesdayR::tt_load('2021-01-26')
+tuesdata <- tidytuesdayR::tt_load(2021, week = 5)
+
+plastics <- tuesdata$plastics
+
+# Or read in the data manually
+
+plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
+
+```
+
+Since there are a few options, I decided to use the tidytuesdayR package option. That way, I can work with any other Tidy Tuesday data without having to find the link. I just need to know the week number.
+
+```{r message=FALSE, warning=FALSE}
+#tuesdata <- tidytuesdayR::tt_load(2021, week = 5) #load in this week's data
+```
+
+`tuesdata` is a list where the first item is our dataframe, so we'll need to extract the plastics item from the list and save it.
+
+```{r}
+#plastics <- tuesdata$plastics #grab the plastics item from the list and save it as plastics (this is our data)
+```
+
+Note: I ended up having to use the other option sometimes when I had too many github requests
+```{r echo=TRUE}
+plastics <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-01-26/plastics.csv')
+```
+
+If we peek at the data, it looks like each row is a `country`-`year`-`parent_company` combination. This data only contains 2019 and 2020.
+
+```{r}
+plastics %>% head() %>% knitr::kable()
+```
+
+Tidy Tuesday also provides a Data Dictionary that explains each column in the dataset:
+
+### Data Dictionary
+
+The plastic is categorized by [recycling codes](https://en.wikipedia.org/wiki/Recycling_codes).
+
+`plastics.csv`
+
+|variable       |class     |description |
+|:---|:---|:-----------|
+|country        |character |Country of cleanup |
+|year           |double    | Year (2019 or 2020) |
+|parent_company |character | Source of plastic |
+|empty          |double    | Category left empty count |
+|hdpe           |double    | High density polyethylene count (Plastic milk containers, plastic bags, bottle caps, trash cans, oil cans, plastic lumber, toolboxes, supplement containers) |
+|ldpe           |double    | Low density polyethylene count (Plastic bags, Ziploc bags, buckets, squeeze bottles, plastic tubes, chopping boards) |
+|o              |double    | Category marked other count |
+|pet            |double    | Polyester plastic count (Polyester fibers, soft drink bottles, food containers (also see plastic bottles) |
+|pp             |double    | Polypropylene count (Flower pots, bumpers, car interior trim, industrial fibers, carry-out beverage cups, microwavable food containers, DVD keep cases) |
+|ps             |double    | Polystyrene count (Toys, video cassettes, ashtrays, trunks, beverage/food coolers, beer cups, wine and champagne cups, carry-out food containers, Styrofoam) |
+|pvc            |double    | PVC plastic count (Window frames, bottles for chemicals, flooring, plumbing pipes) |
+|grand_total    |double    | Grand total count (all types of plastic) |
+|num_events     |double    | Number of counting events |
+|volunteers     |double    | Number of volunteers |
+
+
+```{r eval=FALSE, include=FALSE}
+#Create a markdown table of column names and types
+
+# tibble(variable = names(plastics)) %>% 
+#     mutate(class = map(plastics, typeof)) %>% 
+#     knitr::kable()
+```
+
+### Data Summary
+
+We can use `skimr::skim()` to see a summary of the data, including the number of rows and columns, column types, and some summary stats for each column.
+
+```{r}
+skimr::skim(plastics) #print a summary of the data
+```
+
+---
+
+# Data Wrangling
+
+The first step I'd like to take is renaming the columns using the information in the data dictionary. This will help me to remember what each column means.
+
+```{r}
+plastics_new <- plastics %>%
+  rename("empty_count" = "empty",
+         "high_density_polyethylene_count" = "hdpe",
+         "low_density_polyethylene_count" = "ldpe",
+         "other_count" = "o",
+         "polyester_plastic_count" = "pet",
+         "polypropylene_count" = "pp",
+         "polystyrene_count" = "ps",
+         "pvc_plastic_count" = "pvc",
+         "total_plastic_count" = "grand_total", #I'm renaming this because there is also a country called "Grand Total" and I don't want to mix them up
+         "times_counted" = "num_events")
+  
+  # #rename some values that are the same but have diff names
+  # mutate(parent_company = gsub("estle", "estlé", parent_company),
+  #        parent_company = gsub("PT Mayora Indah Tbk", "Mayora Indah", parent_company),
+  #        parent_company = gsub("Pepsico", "PepsiCo", parent_company))
+
+
+  
+  
+```
+
+# Viz
+
+I'm interested in which parent companies create the most plastic pollution. Here is the code for my final plot:
+
+```r
+#I want to look at the top 10 `parent_company`s with the highest total `total_plastic_count` (of all countries and years)
+
+#Create new dataframe to use for my plot
+p_dat <- plastics_new %>% 
+  
+  #Get total `total_plastic_count` for each company
+  group_by(parent_company) %>%
+  summarise(total_plastic_count = sum(total_plastic_count)) %>%
+  
+  #Remove any parent_company where the name isn't actually 1 company 
+  filter(!parent_company %in% c("null","NULL","Grand Total","Unbranded", "Assorted")) %>%
+  
+  #Keep the rows with the top 10 total_plastic_count values
+  slice_max(order_by = total_plastic_count, n = 10) %>%
+  
+  #Turn all " " and "-" into "\n" to fit more on one line
+  mutate(parent_company = gsub("Tamil Nadu Co-operative Milk Producers' Federation Ltd", "Tamil Nadu Co-operative \nMilk Producers' Federation Ltd", parent_company))
+  
+
+#Create my plot
+p <- p_dat %>%
+  ggplot() +
+  
+  #Add a point for each company's count
+  geom_point(aes(y = reorder(parent_company, total_plastic_count),
+                 x = total_plastic_count,
+                 col = parent_company),
+                size = 15) +
+  
+  #Add a line for each company (lollipop chart)
+  geom_segment(aes(y = parent_company,
+                   yend = parent_company,
+                   x = 0,
+                   xend = total_plastic_count,
+                   col = parent_company),
+                  size = 2) +
+  
+  geom_text(aes(y = reorder(parent_company, total_plastic_count),
+                x = total_plastic_count,
+                label = total_plastic_count),
+            size = 4,
+            col = "white",
+            fontface = "bold") +
+  
+  #scale the y-axis on a log scale so the values aren't as spread out
+  # scale_y_continuous(trans='log10', 
+  #                    breaks = scales::trans_breaks("log10", function(x) 10^x),
+  #                    labels = scales::trans_format("log2",
+  #                                                  scales::math_format(10^.x))) +
+  
+  #Add all my labels
+  labs(title = "Top 10 Creators of Plastic Pollutions Worldwide", 
+       subtitle = "Out of all cleanup events in 2019 and 2020, these 10 companies had the most plastic items that were made by the company.",
+       caption = "Data from breakfreefromplastic.org | Viz by Aubrey Shuga",
+       y = "Company", 
+       x = "Number of Plastic Items Found") +
+  
+  #All theme elements
+  theme(legend.position ="none",
+        panel.background = element_blank(), #remove gray background
+        axis.text.y = element_text(face = "bold", size = 10), #no y-axis tick labels
+        axis.ticks.y = element_blank(), #no y-axis tick marks
+        axis.ticks.x = element_blank()) #no x-axis tick marks
+p
+
+
+#save each plot iteration so I can create a gif at the end
+ggsave(plot = p, filename = file.path("iterations", paste0(Sys.time(),".png"))) 
+```
+```{r echo=FALSE}
+#I want to look at the top 10 `parent_company`s with the highest total `total_plastic_count` (of all countries and years)
+
+#Create new dataframe to use for my plot
+p_dat <- plastics_new %>% 
+  
+  #Get total `total_plastic_count` for each company
+  group_by(parent_company) %>%
+  summarise(total_plastic_count = sum(total_plastic_count)) %>%
+  
+  #Remove any parent_company where the name isn't actually 1 company 
+  filter(!parent_company %in% c("null","NULL","Grand Total","Unbranded", "Assorted")) %>%
+  
+  #Keep the rows with the top 10 total_plastic_count values
+  slice_max(order_by = total_plastic_count, n = 10) %>%
+  
+  #Turn all " " and "-" into "\n" to fit more on one line
+  mutate(parent_company = gsub("Tamil Nadu Co-operative Milk Producers' Federation Ltd", "Tamil Nadu Co-operative \nMilk Producers' Federation Ltd", parent_company))
+  
+
+#Create my plot
+p <- p_dat %>%
+  ggplot() +
+  
+  #Add a point for each company's count
+  geom_point(aes(y = reorder(parent_company, total_plastic_count),
+                 x = total_plastic_count,
+                 col = parent_company),
+                size = 15) +
+  
+  #Add a line for each company (lollipop chart)
+  geom_segment(aes(y = parent_company,
+                   yend = parent_company,
+                   x = 0,
+                   xend = total_plastic_count,
+                   col = parent_company),
+                  size = 2) +
+  
+  geom_text(aes(y = reorder(parent_company, total_plastic_count),
+                x = total_plastic_count,
+                label = total_plastic_count),
+            size = 4,
+            col = "white",
+            fontface = "bold") +
+  
+  #scale the y-axis on a log scale so the values aren't as spread out
+  # scale_y_continuous(trans='log10', 
+  #                    breaks = scales::trans_breaks("log10", function(x) 10^x),
+  #                    labels = scales::trans_format("log2",
+  #                                                  scales::math_format(10^.x))) +
+  
+  #Add all my labels
+  labs(title = "Top 10 Creators of Plastic Pollutions Worldwide", 
+       subtitle = "Out of all cleanup events in 2019 and 2020, these 10 companies had the most plastic items that were made by the company.",
+       caption = "Data from breakfreefromplastic.org | Viz by Aubrey Shuga",
+       y = "Company", 
+       x = "Number of Plastic Items Found") +
+  
+  #All theme elements
+  theme(legend.position ="none",
+        panel.background = element_blank(), #remove gray background
+        axis.text.y = element_text(face = "bold", size = 10), #no y-axis tick labels
+        axis.ticks.y = element_blank(), #no y-axis tick marks
+        axis.ticks.x = element_blank()) #no x-axis tick marks
+
+p
+```
+
+# Gif
+
+While creating my viz for this week, I saved a copy of each iteration. I now want to create a gif to show how my plot chnaged from my initial stab at it to my final plot. [some steps taken from this tutorial](http://www.nagraj.net/notes/gifs-in-r/)
+
+```r
+library(magick)
+
+## list file names in interations folder
+imgs <- list.files("iterations", full.names = TRUE)
+
+#For each filename in imgs, read the image and store it in img_list
+img_list <- lapply(imgs, image_read)
+
+## join the images together
+img_joined <- image_join(img_list)
+
+## animate at 2 frames per second
+img_animated <- image_animate(img_joined, fps = 4)
+
+## view animated image
+img_animated
+
+## save to disk
+image_write(image = img_animated,
+            path = "plastic_pollution.gif")
+```
+
+![](plastic_pollution.gif)
+
+You can see that I wanted to add more, but I ended up giving up and going back to an earlier iteration.
+
