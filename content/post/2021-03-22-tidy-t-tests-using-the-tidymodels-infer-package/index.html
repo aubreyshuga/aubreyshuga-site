@@ -1,0 +1,509 @@
+---
+title: Tidy t-Tests using tidymodels
+author: Aubrey Shuga
+date: '2021-03-22'
+slug: tidy-t-tests-using-tidymodels
+categories: ["R", "Senior Project", "tidymodels"]
+tags: []
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2021-03-22T23:00:47-06:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>I recently discovered <a href="https://www.tidymodels.org/">tidymodels</a>, which is “a collection of packages for modeling and machine learning using tidyverse principles”. I love using the tidyverse, so I was really excited to jump in and get started with tidymodels. The <a href="https://infer.netlify.app/">infer package</a> built into tidymodels includes functions for statistical inference, which is perfect for the work I’m doing as part of my <a href="https://aubreyshuga.netlify.app/category/senior-project/">senior project</a>. In this post, I’ll work through my process using <code>library(infer)</code> to perform various t-Tests on my data. More background information on this project can be found <a href="https://aubreyshuga.netlify.app/post/senior-project-proposal/">here</a>.</p>
+<pre class="r"><code>library(tidyverse)
+library(tidymodels)
+library(pander)</code></pre>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>This analysis focuses only on Tier 3 students, so Referral students were removed from the data. Note: For privacy reasons, the data used in these blog posts is not real data from real students. It is simulated data based on the real dataset from my project. However, it includes the same imperfections and other issues that I ran into while working with the real data.</p>
+<pre class="r"><code>## Source the scripts that contain the code from earlier posts
+source(&quot;wrangling.R&quot;)
+source(&quot;colors.R&quot;)
+
+## Remove any students who aren&#39;t Tier 3
+Students_wide &lt;- Students_wide %&gt;%
+  filter(Student_Type == &quot;Tier 3&quot;)
+
+Mentored &lt;- Mentored %&gt;%
+  filter(`Student Type` == &quot;Tier 3&quot;)
+
+Control &lt;- Control %&gt;%
+  filter(`Student Type` == &quot;Tier 3&quot;)
+
+Students &lt;- Students %&gt;%
+  filter(`Student_Type` == &quot;Tier 3&quot;)
+
+## Source the raincloudplots script now with only the Tier 3 students
+source(&quot;raincloudplots.R&quot;)</code></pre>
+</div>
+<div id="paired-samples-t-test" class="section level1">
+<h1>Paired Samples t-Test</h1>
+<p>For each group, we want to answer the question “Is there an increase from Pre GPA to Post GPA for the average Tier 3 student?”. Because we have both pre and post measurements for each student in our dataset, we can use a paired samples t-test with the following null and alternative hypotheses:</p>
+<p><span class="math display">\[
+  H_0: \mu_{\text{Change in GPA}} = 0
+\]</span></p>
+<p><span class="math display">\[
+  H_a: \mu_{\text{Change in GPA}} &gt; 0
+\]</span></p>
+<p>with a significance level of <span class="math inline">\(\alpha = 0.05\)</span>.</p>
+<p>Our null hypothesis is that the mean change in GPA is 0 (in other words, the average Tier 3 student earned about the same GPA from their “pre” semester to their “post” semester).</p>
+<p>The alternative hypothesis is that the mean change in GPA &gt; 0 (in other words, the average Tier 3 student increased their GPA from pre to post).</p>
+<p>We’ll run this test three times. First on all Tier 3 students, then on only the control group, then on only the mentored group.</p>
+<div id="all-tier-3-students" class="section level2">
+<h2>All Tier 3 Students</h2>
+<p>The chart below shows the Pre and Post GPAs of all Tier 3 students in the dataset. The gray lines connects the two GPAs for each student.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-3-1.png" width="576" style="display: block; margin: auto;" /></p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-4-1.png" width="50%" style="float:right; padding:10px" /></p>
+<p>The boxplot shows that most of the students in the dataset improved their GPAs from Pre 1 to Post 1.
+Specifically, 25% of the students showed large improvement of +2 points or more. 25% of students’ improvement was between +0.8 points and +2 points. 25% of the students had minimal change in GPA, between +0.8 points and -0.1 points. The last 25% of students showed a decrease in GPA from the Pre 1 semester to the Post 2 semester.</p>
+<p>We now want to run a t-test to answer the question, “Is there an increase from Pre GPA to Post GPA for the average Tier 3 student?”. The <code>infer</code> workflow includes four main functions: <code>specify()</code>, <code>hypothesize()</code>, <code>generate()</code>, and <code>calculate()</code> - as well as a variety of wrapper functions that perform specific hypothesis tests. While the wrapper functions are quicker and easier to use, the four workflow functions helped to remind me of everything happening “behind the scenes” of the t-Test and helped me to better understand and interpret the results.</p>
+<p>The functions are designed to be used all together, so steps 1-3 below are just to explore what these functions are doing and are not necessary to do on their own.</p>
+<div id="specify-the-response-variable" class="section level3">
+<h3>1. <code>specify()</code> the Response Variable</h3>
+<p>In this case, our response variable is Change. The <code>specify()</code> function returns a tibble of the specified variables as an “infer” class. For now, we’ll just view the output of <code>specify()</code> using <code>head()</code>.</p>
+<pre class="r"><code>Students_wide %&gt;%
+  specify(response = Change) %&gt;%
+  head()</code></pre>
+<pre><code>## Response: Change (numeric)
+## # A tibble: 6 x 1
+##   Change
+##    &lt;dbl&gt;
+## 1    0.6
+## 2   -0.6
+## 3    2.5
+## 4    1.3
+## 5    0.2
+## 6    2.1</code></pre>
+</div>
+<div id="declare-the-null-hypothesis-with-hypothesize" class="section level3">
+<h3>2. Declare the Null Hypothesis with <code>hypothesize()</code></h3>
+<p>Our null and alternative hypotheses are
+<span class="math display">\[
+  H_0: \mu_{\text{Change in GPA}} = 0
+\]</span></p>
+<p><span class="math display">\[
+  H_a: \mu_{\text{Change in GPA}} &gt; 0
+\]</span></p>
+<p>Because we are looking at the mean of one variable, we will set <code>null = "point"</code> and <code>mu = 0</code>.</p>
+<pre class="r"><code>Students_wide %&gt;%
+  specify(response = Change) %&gt;%
+  hypothesize(null = &quot;point&quot;, mu = 0) %&gt;%
+  head()</code></pre>
+<pre><code>## Response: Change (numeric)
+## Null Hypothesis: point
+## # A tibble: 6 x 1
+##   Change
+##    &lt;dbl&gt;
+## 1    0.6
+## 2   -0.6
+## 3    2.5
+## 4    1.3
+## 5    0.2
+## 6    2.1</code></pre>
+</div>
+<div id="generate-the-null-distribution" class="section level3">
+<h3>3. <code>generate()</code> the Null Distribution</h3>
+<p>Using a bootstrap sample, the <code>generate()</code> function returns a tibble that contains generated data that reflects the null hypothesis.</p>
+<pre class="r"><code>Students_wide %&gt;%
+  specify(response = Change) %&gt;%
+  hypothesize(null = &quot;point&quot;, mu = 0) %&gt;%
+  generate(reps = 1000, type = &quot;bootstrap&quot;) %&gt;%
+  head() %&gt;%
+  pander()</code></pre>
+<table style="width:33%;">
+<colgroup>
+<col width="16%" />
+<col width="16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">replicate</th>
+<th align="center">Change</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">1</td>
+<td align="center">-1.16</td>
+</tr>
+<tr class="even">
+<td align="center">1</td>
+<td align="center">-0.9599</td>
+</tr>
+<tr class="odd">
+<td align="center">1</td>
+<td align="center">0.6401</td>
+</tr>
+<tr class="even">
+<td align="center">1</td>
+<td align="center">0.2401</td>
+</tr>
+<tr class="odd">
+<td align="center">1</td>
+<td align="center">-0.8599</td>
+</tr>
+<tr class="even">
+<td align="center">1</td>
+<td align="center">0.9401</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="calculate-the-observed-t-statistics-and-compare-to-null-distribution" class="section level3">
+<h3>4. <code>calculate()</code> the Observed t-statistics and compare to Null Distribution</h3>
+<p>First, we’ll want to calculate our observed statistic:</p>
+<pre class="r"><code>observed_statistic &lt;- Students_wide %&gt;%
+  specify(response = Change) %&gt;%
+  hypothesize(null = &quot;point&quot;, mu = 0) %&gt;%
+  calculate(stat = &quot;t&quot;)
+
+observed_statistic %&gt;% pander()</code></pre>
+<table style="width:11%;">
+<colgroup>
+<col width="11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">stat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">11.86</td>
+</tr>
+</tbody>
+</table>
+<p>The observed statistic from our data is 11.83 We want to know how likely it would be to get a test stat this extreme if the null hypothesis was true. We can do this by calculating this t stat for the null distribution. We can also visualize this by using the <code>visualize()</code> and <code>shade_p_value()</code> functions.</p>
+<pre class="r"><code>Students_wide %&gt;%
+  specify(response = Change) %&gt;%
+  hypothesize(null = &quot;point&quot;, mu = 0) %&gt;%
+  generate(reps = 1000, type = &quot;bootstrap&quot;) %&gt;%
+  calculate(stat = &quot;t&quot;) %&gt;%
+  
+  visualize()  + 
+  shade_p_value(observed_statistic,
+                direction = &quot;greater&quot;)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>It looks like our observed stat would be very unlikely if the true mean GPA improvement was 0 points.</p>
+</div>
+<div id="get_p_value-from-the-test-statistic" class="section level3">
+<h3>5. <code>get_p_value()</code> from the test statistic</h3>
+<pre class="r"><code>Students_wide %&gt;%
+  specify(response = Change) %&gt;%
+  hypothesize(null = &quot;point&quot;, mu = 0) %&gt;%
+  generate(reps = 1000, type = &quot;bootstrap&quot;) %&gt;%
+  calculate(stat = &quot;t&quot;) %&gt;%
+  get_p_value(obs_stat = observed_statistic,
+              direction = &quot;greater&quot;) %&gt;%
+  pander()</code></pre>
+<table style="width:14%;">
+<colgroup>
+<col width="13%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">p_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">0</td>
+</tr>
+</tbody>
+</table>
+<p>The p-value was very very small and rounded to 0. This means that the probability of seeing a test statistic as extreme or more extreme as our observed test statistic (11.86) is approximately 0, which which is below our significance level of 0.05. There is significant evidence to reject the null hypothesis in favor of our alternative hypothesis that the average student increased their semester GPA from Pre 1 to Post 1.</p>
+</div>
+<div id="wrapper-function-t_test" class="section level3">
+<h3>Wrapper Function <code>t_test()</code></h3>
+<p>Another way to perform this t-test is the use the wrapper function provided in the <code>infer</code> package. This function is much quicker and simpler, but does not allow for quick visualization like the above workflow.</p>
+<p>To use <code>t_test()</code>, we’ll pass in our response variable, <code>mu = 0</code>, and <code>alternative = greater</code>. It’ll perform the test in the background and return the test statistic, degrees of freedom, p_value, direction of alternative hypothesis, and a 95% confidence interval.</p>
+<pre class="r"><code>Students_wide %&gt;%
+  t_test(response = Change, 
+         mu = 0, 
+         alternative = &quot;greater&quot;) %&gt;%
+  pander()</code></pre>
+<table style="width:93%;">
+<colgroup>
+<col width="16%" />
+<col width="9%" />
+<col width="16%" />
+<col width="19%" />
+<col width="15%" />
+<col width="15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">statistic</th>
+<th align="center">t_df</th>
+<th align="center">p_value</th>
+<th align="center">alternative</th>
+<th align="center">lower_ci</th>
+<th align="center">upper_ci</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">11.86</td>
+<td align="center">368</td>
+<td align="center">5.155e-28</td>
+<td align="center">greater</td>
+<td align="center">0.7404</td>
+<td align="center">Inf</td>
+</tr>
+</tbody>
+</table>
+<p>We see the same results as before, along with the exact value for our p-value (5.155e-28) and our 95% confidence interval. It can be said with 95% confidence that a Tier 3 student would improve their GPA from Pre_1 to Post_1 by 0.74 points or more.</p>
+</div>
+</div>
+<div id="control-group" class="section level2">
+<h2>Control Group</h2>
+<p>Next, we want to run this same test on only the control group. I’ll use the wrapper function for this group.</p>
+<p>The chart below shows the Pre and Post GPAs of the students in the Control group. The gray lines connects the two GPAs for each student.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-12-1.png" width="576" style="display: block; margin: auto;" /></p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-13-1.png" width="50%" style="float:right; padding:10px" /></p>
+<p>The boxplot shows that most of the control group improved their GPAs from Pre 1 to Post 1. Specifically, 25% of the students showed large improvement of +1.6 points or more. 25% of students’ improvement was between +0.5 points and +1.6 points. 25% of the students had minimal change in GPA, between +0.5 points and -0.4 points. The last 25% of students showed a decrease in GPA from the Pre 1 semester to the Post 2 semester.</p>
+<pre class="r"><code>Students_wide %&gt;%
+  filter(Group == &quot;Control&quot;) %&gt;%
+  t_test(response = Change, mu = 0, alternative = &quot;greater&quot;) %&gt;%
+  pander()</code></pre>
+<table style="width:93%;">
+<colgroup>
+<col width="16%" />
+<col width="9%" />
+<col width="16%" />
+<col width="19%" />
+<col width="15%" />
+<col width="15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">statistic</th>
+<th align="center">t_df</th>
+<th align="center">p_value</th>
+<th align="center">alternative</th>
+<th align="center">lower_ci</th>
+<th align="center">upper_ci</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">5.784</td>
+<td align="center">168</td>
+<td align="center">1.742e-08</td>
+<td align="center">greater</td>
+<td align="center">0.4284</td>
+<td align="center">Inf</td>
+</tr>
+</tbody>
+</table>
+<p>A t-test on the data produces a p-value of 1.742e-08, which is below our significance level of 0.05. This means there is significant evidence to reject the null hypothesis in favor of our alternative hypothesis that the average Control group student increased their semester GPA from Pre 1 to Post 1. It can be said with 95% confidence that a Tier 3 student in the Control Group would improve their GPA from Pre_1 to Post_1 by 0.428 points or more.</p>
+</div>
+<div id="mentored-group" class="section level2">
+<h2>Mentored Group</h2>
+<p>The chart below shows the Pre and Post GPAs of the students in the Mentored group. The gray lines connects the two GPAs for each student.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-15-1.png" width="576" style="display: block; margin: auto;" /></p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-16-1.png" width="50%" style="float:right; padding:10px" /></p>
+<p>The boxplot shows that most of the Mentored group improved their GPAs from Pre 1 to Post 1. Specifically, 25% of the students showed very large improvement of +2.2 points or more. 25% of students’ improvement was between +1.2 points and +2.2 points. 25% of the students’ change was between +1.2 points and -0.1 points. The last 25% of students showed a decrease in GPA from the Pre 1 semester to the Post 2 semester.</p>
+<pre class="r"><code>Students_wide %&gt;%
+  filter(Group == &quot;Mentored&quot;) %&gt;%
+  t_test(response = Change, mu = 0, alternative = &quot;greater&quot;) %&gt;%
+  pander()</code></pre>
+<table style="width:93%;">
+<colgroup>
+<col width="16%" />
+<col width="9%" />
+<col width="16%" />
+<col width="19%" />
+<col width="15%" />
+<col width="15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">statistic</th>
+<th align="center">t_df</th>
+<th align="center">p_value</th>
+<th align="center">alternative</th>
+<th align="center">lower_ci</th>
+<th align="center">upper_ci</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">10.95</td>
+<td align="center">199</td>
+<td align="center">1.901e-22</td>
+<td align="center">greater</td>
+<td align="center">0.9166</td>
+<td align="center">Inf</td>
+</tr>
+</tbody>
+</table>
+<p>A t-test on the data produces a p-value of 1.901e-22, which is below our significance level of 0.05. This means there is significant evidence to reject the null hypothesis in favor of our alternative hypothesis that the average Mentored student increased their semester GPA from Pre 1 to Post 1. It can be said with 95% confidence that a Tier 3 student in the Mentored Group would improve their GPA from Pre_1 to Post_1 by 0.917 points or more.</p>
+<hr />
+</div>
+</div>
+<div id="independent-samples-t-test" class="section level1">
+<h1>Independent Samples t-Test</h1>
+<p>Next, we want to answer the question “Do students in the Mentored group have a higher increase from Pre GPA to Post GPA than student in the control group?”</p>
+<p><span class="math display">\[
+  H_0: \mu_{\text{Mentored}} - \mu_{\text{Control}} = 0
+\]</span></p>
+<p><span class="math display">\[
+  H_a: \mu_{\text{Mentored}} - \mu_{\text{Control}} &gt; 0
+\]</span></p>
+<p>with a significance level of <span class="math inline">\(\alpha = 0.05\)</span>.</p>
+<p>Our null hypothesis is that the mean change in GPA is the same for both Mentored and Control group students.</p>
+<p>The alternative hypothesis is that the mean change in GPA is higher for Mentored students than Control Group students.</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>Again, there are two ways to do an independent t-Test using the <code>infer</code> framework.</p>
+<div id="step-by-step" class="section level2">
+<h2>Step by step</h2>
+<div id="calculate-our-observed-statistic" class="section level3">
+<h3>1. <code>calculate()</code> our observed statistic</h3>
+<p>We’ll need to specify our explanatory variable too, which is Group. We also want to provide an order to subtract the means in so that a positive difference means that Mentored students improve more than Control students.</p>
+<pre class="r"><code>observed_statistic &lt;- Students_wide %&gt;%
+  specify(response = Change, 
+          explanatory = Group) %&gt;%
+  calculate(stat = &quot;t&quot;,
+            order = c(&quot;Mentored&quot;, &quot;Control&quot;))
+
+observed_statistic %&gt;% pander()</code></pre>
+<table style="width:11%;">
+<colgroup>
+<col width="11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">stat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">3.351</td>
+</tr>
+</tbody>
+</table>
+<p>The observed statistic from our data is 3.539. We want to know how likely it would be to get a test stat this extreme if the null hypothesis was true and there was no relationship between what group a student is in and how much they improve. We can do this by generating the null distribution. We can also visualize this by using the <code>visualize()</code> and <code>shade_p_value()</code> functions.</p>
+</div>
+<div id="generate-a-null-distribution" class="section level3">
+<h3>2. <code>generate()</code> a null distribution</h3>
+<p>Because this is now an independent samples t-Test, we need to declare our new null hypothesis with <code>hypothesize(null = "independence")</code>. We also need to change the sample type to be <code>type = "permute"</code></p>
+<pre class="r"><code>Students_wide %&gt;%
+  specify(response = Change, 
+          explanatory = Group) %&gt;%
+  hypothesize(null = &quot;independence&quot;) %&gt;%
+  generate(reps = 1000, type = &quot;permute&quot;) %&gt;%
+  calculate(stat = &quot;t&quot;,
+            order = c(&quot;Mentored&quot;, &quot;Control&quot;)) %&gt;%
+  visualize()  + 
+  shade_p_value(observed_statistic,
+                direction = &quot;greater&quot;)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p>It looks like our observed stat would be very unlikely if the null hypothesis was true and there was no relationship between what group a student is in and how much they improve.</p>
+</div>
+<div id="get_p_value-from-the-test-statistic-1" class="section level3">
+<h3>3. <code>get_p_value()</code> from the test statistic</h3>
+<pre class="r"><code>Students_wide %&gt;%
+  specify(response = Change, 
+          explanatory = Group) %&gt;%
+  hypothesize(null = &quot;independence&quot;) %&gt;%
+  generate(reps = 1000, type = &quot;permute&quot;) %&gt;%
+  calculate(stat = &quot;t&quot;,
+            order = c(&quot;Mentored&quot;, &quot;Control&quot;)) %&gt;%
+  get_p_value(obs_stat = observed_statistic,
+              direction = &quot;greater&quot;) %&gt;%
+  pander()</code></pre>
+<table style="width:14%;">
+<colgroup>
+<col width="13%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">p_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">0</td>
+</tr>
+</tbody>
+</table>
+<p>The p-value was very very small and rounded to 0. This means that the probability of seeing a test statistic as extreme or more extreme as our observed test statistic (3.351) is approximately 0, which which is below our significance level of 0.05. There is significant evidence to reject the null hypothesis in favor of our alternative hypothesis that the mean change in GPA is higher for Mentored students than Control Group students.</p>
+</div>
+</div>
+<div id="wrapper-function-t_test-1" class="section level2">
+<h2>Wrapper Function <code>t_test()</code></h2>
+<p>Again, we can perform this t-test using the wrapper function provided in the <code>infer</code> package.</p>
+<pre class="r"><code>Students_wide %&gt;%
+  t_test(response = Change,
+         explanatory = Group,
+         order = c(&quot;Mentored&quot;, &quot;Control&quot;),
+         alternative = &quot;greater&quot;) %&gt;%
+  pander()</code></pre>
+<table style="width:94%;">
+<colgroup>
+<col width="16%" />
+<col width="11%" />
+<col width="16%" />
+<col width="19%" />
+<col width="15%" />
+<col width="15%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">statistic</th>
+<th align="center">t_df</th>
+<th align="center">p_value</th>
+<th align="center">alternative</th>
+<th align="center">lower_ci</th>
+<th align="center">upper_ci</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">3.351</td>
+<td align="center">360.3</td>
+<td align="center">0.0004457</td>
+<td align="center">greater</td>
+<td align="center">0.2435</td>
+<td align="center">Inf</td>
+</tr>
+</tbody>
+</table>
+<p>We see the same results as before, along with the exact value for our p-value (0.0004457) and our 95% confidence interval. It can be said with 95% confidence that students in the Mentored group improve by at least 0.244 points more than the students in the Control group.</p>
+<hr />
+</div>
+</div>
+<div id="further-study" class="section level1">
+<h1>Further Study</h1>
+<p>A further analysis could be done comparing Referral Mentored students to Tier 3 Mentored students, as they might be impacted by mentoring differently. Additionally, the Mentored group used in this study includes students with various mentoring statuses, as marked at the end of their Tier 3 semester:</p>
+<ol style="list-style-type: decimal">
+<li><p>Fulfilled Program</p></li>
+<li><p>Active Mentoring</p></li>
+<li><p>Dropped</p></li>
+<li><p>Referred to HJG/Skills Mentoring</p></li>
+</ol>
+<p>These students all had a different mentoring experience, so it would be interesting to compare the outcomes between those different mentoring statuses rather than grouping them all together.</p>
+<div id="sampling-method-and-test-appropriateness" class="section level2">
+<h2>Sampling Method and Test Appropriateness</h2>
+<p>This data only includes Tier 3 students who meet the following criteria:</p>
+<ol style="list-style-type: decimal">
+<li><p>Attended and completed the semester they were placed* on Tier 3 (either Fall 2018 or Winter 2019)</p></li>
+<li><p>Attended and completed at least one additional semester after their Tier 3 semester, within 2 semesters (Winter 2019 and/or Spring 2019)</p></li>
+</ol>
+<p>*Placed on Tier 3 list at beginning of the semester due to their performance in their previous semester.</p>
+<p>This sample of students may not be representative of all Tier 3 students. A more robust analysis could be done using a random sample of Tier 3 students that includes Mentored and Control students who skipped multiple semesters following their Tier 3 semester, or students who were off-track immediately following their Tier 3 semester and had not attended another semester by the time this data was collected.</p>
+<p>Due to the nature of the sampling, a non-parametric test might be more appropriate for this data.</p>
+</div>
+</div>
