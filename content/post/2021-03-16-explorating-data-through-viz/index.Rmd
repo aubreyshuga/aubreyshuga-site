@@ -574,7 +574,7 @@ Both the mean and the median change in the Mentored group are a good amount high
 
 # Next Steps
 
-The next step will be to run some hypothesis tests to see if there is a significant difference between these two groups.
+The next step will be to run some [hypothesis tests](https://aubreyshuga.netlify.app/post/tidy-t-tests-using-tidymodels/) to see if there is a significant difference between these two groups.
 
 Further analysis will include exploring the different Status groups and possibly running hypothesis tests on those, as well as exploring the success of Referral students vs Tier 3 students.
 

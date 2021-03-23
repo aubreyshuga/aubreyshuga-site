@@ -488,7 +488,7 @@ Our new tidy dataframe Student_long holds all students with the following column
 
 ## Moving Forward
 
-Now that the data is tidy and ready to go, I can use it to make [visuals](https://aubreyshuga.netlify.app/post/exploratory-visuals/) or run [hypothesis tests](). Wrangling can be a big part of any data science project (sometimes even the biggest part!), but it is so necessary for the rest of the project to go smoothly.
+Now that the data is tidy and ready to go, I can use it to make [visuals](https://aubreyshuga.netlify.app/post/exploratory-visuals/) or run [hypothesis tests](https://aubreyshuga.netlify.app/post/tidy-t-tests-using-tidymodels/). Wrangling can be a big part of any data science project (sometimes even the biggest part!), but it is so necessary for the rest of the project to go smoothly.
 
 Check out the rest of my work on this project [here](https://aubreyshuga.netlify.app/category/senior-project/).
 
